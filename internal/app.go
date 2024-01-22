@@ -2,12 +2,11 @@ package app
 
 import (
 	C "shortlink2/internal/cfg"
+	H "shortlink2/internal/http"
 	L "shortlink2/internal/log"
 	T "shortlink2/internal/types"
-
 	// D "shortlink2/internal/db"
 	// S "shortlink2/internal/service"
-	H "shortlink2/internal/http"
 )
 
 type App struct {

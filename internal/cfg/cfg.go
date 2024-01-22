@@ -35,7 +35,7 @@ func parseOsEnvVars(cfg *T.CfgEnv, log T.ILog) {
 	for i := 0; i < t.NumField(); i++ {
 		key := t.Field(i).Name
 		val := v.Field(i)
-		if el, ok := os.LookupEnv(key); ok {
+		if el, ok := os.LookupEnv(key); ok && (len(el) > 0) {
 			val.SetString(el)
 			log.LogDebug("OSENV %s=%s\n", key, val)
 		}
