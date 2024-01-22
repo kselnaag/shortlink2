@@ -1,6 +1,7 @@
 package app
 
 import (
+	"os"
 	C "shortlink2/internal/cfg"
 	H "shortlink2/internal/http"
 	L "shortlink2/internal/log"
@@ -17,7 +18,7 @@ type App struct {
 }
 
 func NewApp() *App {
-	cfg := C.NewCfg("shortlink2.env")
+	cfg := C.NewCfg(os.Args[0] + ".env")
 	log := L.NewLogFprintf(cfg)
 	db := D.NewSQLite(cfg, log)
 	svcsl := S.NewSvcShortLink(db, log)
