@@ -48,14 +48,14 @@ func parseFileDotEnv(filename string, cfg *T.CfgEnv, log T.ILog) {
 		log.LogError(err, "(CfgEnv).parseFileDotEnv(): error with opening cfg file")
 		return
 	}
-	donenvmap := make(map[string]string, 8)
+	cfgmap := make(map[string]string, 8)
 	pattern := regexp.MustCompile("^[0-9A-Za-z_:]+=[0-9A-Za-z_:]+")
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		str := pattern.FindString(scanner.Text())
 		if len(str) > 0 {
 			strarr := strings.Split(str, "=")
-			donenvmap[strarr[0]] = strarr[1]
+			cfgmap[strarr[0]] = strarr[1]
 			log.LogDebug("CFGFILE %s=%s\n", strarr[0], strarr[1])
 		}
 	}
@@ -69,10 +69,10 @@ func parseFileDotEnv(filename string, cfg *T.CfgEnv, log T.ILog) {
 	for i := 0; i < t.NumField(); i++ {
 		key := t.Field(i).Name
 		val := v.Field(i)
-		if el, ok := donenvmap[key]; ok {
+		if el, ok := cfgmap[key]; ok && (len(el) > 0) {
 			val.SetString(el)
 		}
-		log.LogDebug("STRUCT %s=%s\n", key, val)
+		log.LogDebug("CFGSTRUCT %s=%s\n", key, val)
 	}
 }
 
