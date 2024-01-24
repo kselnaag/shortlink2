@@ -1,8 +1,8 @@
 package types
 
 type IDB interface {
-	LoadLinkPair(hash string) (string, string)
 	SaveLinkPair(hash, link string) bool
+	LoadLinkPair(hash string) string
 	DeleteLinkPair(hash string) bool
 	ConnectDB() func(e error)
 }
