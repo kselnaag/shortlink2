@@ -15,12 +15,12 @@ var _ T.IHTTPServer = (*HTTPServerNet)(nil)
 
 type HTTPServerNet struct {
 	hsrv *http.Server
-	svc  T.ISvcShortLink
+	svc  T.ISvcShortLink2
 	log  T.ILog
 	cfg  *T.CfgEnv
 }
 
-func NewHTTPServerNet(svc T.ISvcShortLink, log T.ILog, cfg *T.CfgEnv) *HTTPServerNet {
+func NewHTTPServerNet(svc T.ISvcShortLink2, log T.ILog, cfg *T.CfgEnv) *HTTPServerNet {
 	return &HTTPServerNet{
 		hsrv: nil,
 		svc:  svc,
