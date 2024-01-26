@@ -1,0 +1,410 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "SHORTLINK - OpenAPI 3.0",
+    "description": "SHORTLINK 📏 Let us make your links shorter in easy way !\n\n",
+    "termsOfService": "http://swagger.io/terms/",
+    "contact": {
+      "email": "kselnaag@gmail.com"
+    },
+    "license": {
+      "name": "MIT License",
+      "url": "https://github.com/kselnaag/shortlink/blob/master/LICENSE"
+    },
+    "version": "0.1.0"
+  },
+  "externalDocs": {
+    "description": "SHORTLINK github repository",
+    "url": "https://github.com/kselnaag/shortlink"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080"
+    }
+  ],
+  "tags": [
+    {
+      "name": "openAPI",
+      "description": ""
+    },
+    {
+      "name": "testAPI",
+      "description": ""
+    },
+    {
+      "name": "linkAPI",
+      "description": ""
+    }
+  ],
+  "paths": {
+    "/oapi/": {
+      "get": {
+        "tags": [
+          "openAPI"
+        ],
+        "summary": "swagger openAPI doc",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "text/html; charset=utf-8": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTMLpage"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Page not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/check/ping": {
+      "get": {
+        "tags": [
+          "testAPI"
+        ],
+        "summary": "ping up and running server",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Check"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/check/abs": {
+      "get": {
+        "tags": [
+          "testAPI"
+        ],
+        "summary": "bad request",
+        "responses": {
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Check"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/check/panic": {
+      "get": {
+        "tags": [
+          "testAPI"
+        ],
+        "summary": "server panics",
+        "responses": {
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Check"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/check/close": {
+      "get": {
+        "tags": [
+          "testAPI"
+        ],
+        "summary": "server close",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Check"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/check/allpairs": {
+      "get": {
+        "tags": [
+          "testAPI"
+        ],
+        "summary": "get all link pairs from DB",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Check"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "tags": [
+          "linkAPI"
+        ],
+        "summary": "get web client ",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTMLpage"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/r/{hash}": {
+      "get": {
+        "tags": [
+          "linkAPI"
+        ],
+        "summary": "redirect to long link from short link (hash)",
+        "parameters": [
+          {
+            "name": "hash",
+            "in": "query",
+            "description": "hash string consisting of 6 letters or nums",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "available",
+              "enum": ["available"]
+            }
+          }
+        ],
+        "responses": {
+          "301": {
+            "description": "Moved permanently",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTMLpage"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/long": {
+      "post": {
+        "tags": [
+          "linkAPI"
+        ],
+        "summary": "short link from long link",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkReq"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "206": {
+            "description": "Partial content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LinkResp"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/short": {
+      "post": {
+        "tags": [
+          "linkAPI"
+        ],
+        "summary": "long link from short link",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkReq"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "206": {
+            "description": "Partial content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LinkResp"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/save": {
+      "post": {
+        "tags": [
+          "linkAPI"
+        ],
+        "summary": "connect long link and short link with save",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkReq"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LinkResp"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HTMLpage": {
+        "type": "string"
+      },
+      "Check":{
+        "type": "object",
+        "properties": {
+          "isResp": {
+            "type": "boolean",
+            "example": true
+          },
+          "Mode":{
+            "type": "string",
+            "example": "check"
+          },
+          "Body":{
+            "type": "string",
+            "example": "pong"
+          }
+        }
+      },
+      "LinkReq":{
+        "type": "object",
+        "properties": {
+          "isResp": {
+            "type": "boolean",
+            "example": false
+          },
+          "Mode":{
+            "type": "string",
+            "example": ""
+          },
+          "Body":{
+            "type": "string",
+            "example": "5clp60"
+          }
+        }
+      },
+      "LinkResp":{
+        "type": "object",
+        "properties": {
+          "isResp": {
+            "type": "boolean",
+            "example": true
+          },
+          "Mode":{
+            "type": "string",
+            "example": "206"
+          },
+          "Body":{
+            "type": "string",
+            "example": "5clp60"
+          }
+        }
+      }
+    }
+  }
+}

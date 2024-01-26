@@ -3,12 +3,14 @@ package http
 import (
 	"context"
 	"fmt"
+	"io/fs"
 	"net/http"
 	"os"
 	"time"
 
 	R "shortlink2/internal/http/route"
 	T "shortlink2/internal/types"
+	"shortlink2/web"
 )
 
 var _ T.IHTTPServer = (*HTTPServerNet)(nil)
@@ -18,54 +20,70 @@ type HTTPServerNet struct {
 	svc  T.ISvcShortLink2
 	log  T.ILog
 	cfg  *T.CfgEnv
+	fs   http.FileSystem
 }
 
 func NewHTTPServerNet(svc T.ISvcShortLink2, log T.ILog, cfg *T.CfgEnv) *HTTPServerNet {
+	subFS, err := fs.Sub(web.StaticFS, "data")
+	if err != nil {
+		log.LogError(err, "staticFS: embedFS error")
+	}
 	return &HTTPServerNet{
 		hsrv: nil,
 		svc:  svc,
 		log:  log,
 		cfg:  cfg,
+		fs:   http.FS(subFS),
 	}
 }
 
-func midf1(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("midf1")
+func getRedirect(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "redirect %s\n", r.URL.Path)
+	fmt.Println("redirect")
 }
 
-func midf2(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("midf2")
+func getLoad(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "load %s\n", r.URL.Path)
+	fmt.Println("load")
 }
 
-func home(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "home %s\n", r.URL.Path)
+func postSave(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "save %s\n", r.URL.Path)
+	fmt.Println("save")
 }
 
-func text(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "text %s\n", r.URL.Path)
+func postDelete(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "delete %s\n", r.URL.Path)
+	fmt.Println("delete")
 }
 
-func widget(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "widget %s\n", r.URL.Path)
-}
+/*
+	func getIndex(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "index %s\n", r.URL.Path)
+		fmt.Println("index")
+	}
+*/
 
-func (hns *HTTPServerNet) handler() *R.RouteHandler {
+func (hns *HTTPServerNet) handlers() *R.RouteHandler {
 	middlewares := &[]*R.Middleware{
-		R.NewMiddleware(midf1),
-		R.NewMiddleware(midf2),
+		// R.NewMiddleware(midf1),
+		// R.NewMiddleware(midf2),
 	}
 	routes := []*R.Route{
-		R.NewRoute("GET", "/", home),
-		R.NewRoute("POST", "/([a-z]+)", text),
-		R.NewRoute("GET", "/([0-9]+)", widget),
+		// R.NewRoute("GET", "/", getIndex),
+		R.NewRoute("GET", "/r/[a-z0-9]{6}", getRedirect),
+		R.NewRoute("GET", "/load", getLoad),
+		R.NewRoute("POST", "/save", postSave),
+		R.NewRoute("POST", "/delete", postDelete),
 	}
-	return R.NewRouteHandler(middlewares, routes, hns.log)
+	staticfs := http.StripPrefix("/", http.FileServer(hns.fs))
+	return R.NewRouteHandler(middlewares, routes, staticfs, hns.log)
 }
 
 func (hns *HTTPServerNet) Run() func(e error) {
 	hns.hsrv = &http.Server{
 		Addr:           hns.cfg.SL_HTTP_PORT,
-		Handler:        hns.handler(),
+		Handler:        hns.handlers(),
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,
 		IdleTimeout:    10 * time.Second,

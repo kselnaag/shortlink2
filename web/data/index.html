@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SHORTLINK 📏 Let us make your links shorter in easy way !</title>
+    <link rel="icon" type="image/png" href="./favicon.png">
+</head>
+<body style="background-color: #0d1721; color: #cccccc;">
+    <div style="display:inline-block; margin-left:20%;">
+        <h1>SHORTLINK 📏 Let us make your links shorter in easy way !</h1>
+    </div>
+    <hr />
+    <div style="display:inline-block; margin-left:30%;">
+        <p>Short link:  <input style="background-color: #171d30; color: #cccccc;" name="short" id="short" type="text" size="39"/></p>
+        <p>Long link: 
+            <input style="background-color: #171d30; color: #cccccc;" name="generate" id="generate" type="button" value="generate" onclick="generate()"/>   
+            <input style="background-color: #171d30; color: #cccccc;" name="check" id="check" type="button" value="check" onclick="check()"/>
+        </p>
+        <p><textarea style="background-color: #171d30; color: #cccccc; resize:none;" name="long" id="long" cols="50" rows="10"></textarea></p>  
+        <p>Instruction:</p>
+        <ul>
+            <li>paste your long link in lower text area</li>
+            <li>click on "generate" button</li>
+            <li>in upper text field will be short hash</li>
+            <li>join the hash with the host address and paste the short link as browser address field</li>
+            <li>server redirects you to the long link address</li>            
+        </ul>
+        <p>Notice: http only !</p>
+        <p>Long link:"http://lib.ru"          Short link(hash):"5clp60"          redirect:"localhost:8080/r/5clp60"</p>
+        <ul>
+            <li>you have the short link</li>
+            <li>you want to check if the long link associated with</li>
+            <li>paste the short link to upper text field and click "check" button</li>
+            <li>keep another field empty before click</li>
+        </ul>
+        <ul>
+            <li>you have the long link</li>
+            <li>you want to check if the short link associated with</li>
+            <li>paste the long link to lower text area and click "check" button</li>
+            <li>keep another field empty before click</li>
+        </ul>
+        <p><a href="oapi/">open api v3</a></p>
+    </div>    
+    <script>
+        short = document.getElementById("short");
+        long = document.getElementById("long");
+        async function generate() {
+            if (long.value != "") {
+                short.value = ""
+                resp = await fetch('save', {
+                    method: 'POST',
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Cache-Control": "no-cache"
+                    }, 
+                    body: JSON.stringify({"IsResp":false, "Mode":"save", "Body":long.value})
+                }).then((response) => response.json()
+                ).then((result) => {
+                    console.log("Success:", result);
+                    if (result.Mode == "201") {
+                        short.value = result.Body
+                    } else {
+                        short.value = "not found"
+                    }                
+                }).catch((error) => {
+                    console.error("Error: ", error);
+                    short.value = "not found"
+                })
+            }
+        }
+        async function check() {
+            if ((short.value == "") && (long.value != "")) {
+                resp = await fetch('long', {
+                    method: 'POST',
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Cache-Control": "no-cache"
+                    }, 
+                    body: JSON.stringify({"IsResp":false, "Mode":"long", "Body":long.value})
+                }).then((response) => response.json()
+                ).then((result) => {
+                    console.log("Success:", result);
+                    if (result.Mode == "206") {
+                        short.value = result.Body
+                    } else {
+                        short.value = "not found"
+                    }                
+                }).catch((error) => {
+                    console.error("Error: ", error);
+                    short.value = "not found"
+                })
+            }
+            if ((long.value == "") && (short.value != "")) {
+                resp = await fetch('short', {
+                    method: 'POST',
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Cache-Control": "no-cache"
+                    }, 
+                    body: JSON.stringify({"IsResp":false, "Mode":"short", "Body":short.value})
+                }).then((response) => response.json()
+                ).then((result) => {
+                    console.log("Success:", result);
+                    if (result.Mode == "206") {
+                        long.value = result.Body
+                    } else {
+                        long.value = "not found"
+                    }                
+                }).catch((error) => {
+                    console.error("Error: ", error);
+                    long.value = "not found"
+                })
+            }            
+        }
+    </script>
+</body>
+</html>
