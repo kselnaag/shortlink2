@@ -78,14 +78,13 @@ func (rh *RouteHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if isWrongMethod {
-		rh.log.LogError(errors.New("405 method not allowed"), "wrong method path match")
 		http.Error(w, "405 method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	if rh.staticfs != nil {
 		rh.staticfs.ServeHTTP(w, r)
+	} else {
+		http.NotFound(w, r)
 	}
-
-	http.NotFound(w, r)
 }
