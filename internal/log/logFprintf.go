@@ -46,7 +46,7 @@ func NewLogFprintf(cfg *T.CfgEnv) *LogFprintf {
 
 func logMessage(lvl, host, svc, err, mess string) {
 	timenow := time.Now().Format(time.RFC3339Nano)
-	fmt.Fprintf(os.Stderr, "{\"T\":\"%s\",\"L\":\"%s\",\"H\":\"%s\",\"S\":\"%s\",\"M\":\"%s\",\"E\":\"%s\"}\n", timenow, lvl, host, svc, mess, err)
+	fmt.Fprintf(os.Stderr, `{"T":"%s","L":"%s","H":"%s","S":"%s","M":"%s","E":"%s"}`+"\n", timenow, lvl, host, svc, mess, err)
 }
 
 func (l *LogFprintf) LogTrace(format string, v ...any) {
