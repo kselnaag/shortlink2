@@ -14,13 +14,15 @@ type DBMock struct {
 	rwmu sync.RWMutex
 }
 
-// dbmock.Store("5clp60", "http://lib.ru")
-// dbmock.Store("dhiu79", "http://google.ru")
 func NewDBMock(cfg *T.CfgEnv, log T.ILog) *DBMock {
+	mockdb := make(map[string]string, 8)
+	mockdb["5clp60"] = "http://lib.ru"
+	// dbmock.Store("5clp60", "http://lib.ru")
+	// dbmock.Store("dhiu79", "http://google.ru")
 	return &DBMock{
 		log: log,
 		cfg: cfg,
-		db:  make(map[string]string, 8),
+		db:  mockdb,
 	}
 }
 
