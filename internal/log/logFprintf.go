@@ -16,7 +16,7 @@ type LogFprintf struct {
 }
 
 func NewLogFprintf(cfg *T.CfgEnv) *LogFprintf {
-	host := cfg.SL_HTTP_IP + cfg.SL_HTTP_PORT
+	host := cfg.SL_HTTP_IP + cfg.SL_HTTP_PORT + cfg.SL_GRPC_PORT
 	svc := cfg.SL_APP_NAME + cfg.SL_APP_PROTOCS
 	var lvl T.LogLevel
 	switch cfg.SL_LOG_LEVEL {
