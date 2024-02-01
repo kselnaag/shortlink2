@@ -1,7 +1,6 @@
 package app
 
 import (
-	"os"
 	C "shortlink2/internal/cfg"
 	D "shortlink2/internal/db"
 	H "shortlink2/internal/http"
@@ -17,8 +16,8 @@ type App struct {
 	cfg  *T.CfgEnv
 }
 
-func NewApp() *App {
-	cfg := C.NewCfg(os.Args[0] + ".env")
+func NewApp(cfgfilaname string) *App {
+	cfg := C.NewCfgEnv(cfgfilaname)
 	log := L.NewLogFprintf(cfg)
 	// db := D.NewSQLite(cfg, log)
 	db := D.NewDBMock(cfg, log)

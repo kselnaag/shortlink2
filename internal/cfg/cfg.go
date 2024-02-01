@@ -11,8 +11,8 @@ import (
 	"strings"
 )
 
-func NewCfg(cfgname string) *T.CfgEnv {
-	cfg := &T.CfgEnv{ // default env
+func NewCfgEnv(cfgfilename string) *T.CfgEnv {
+	cfg := &T.CfgEnv{ // default vals
 		SL_APP_NAME:    "shortlink2",
 		SL_APP_PROTOCS: ":http:grpc",
 		SL_LOG_LEVEL:   "INFO",
@@ -22,8 +22,8 @@ func NewCfg(cfgname string) *T.CfgEnv {
 	}
 	log := L.NewLogFprintf(cfg)
 	parseIpFromInterfaces(cfg, log)
-	if _, err := os.Stat(cfgname); err == nil {
-		parseFileDotEnv(cfgname, cfg, log)
+	if _, err := os.Stat(cfgfilename); err == nil {
+		parseFileDotEnv(cfgfilename, cfg, log)
 	}
 	parseOsEnvVars(cfg, log)
 	return cfg

@@ -13,7 +13,7 @@ func main() {
 	// debug.SetGCPercent(100)
 	// debug.SetMemoryLimit(2 831 155 200)
 
-	myApp := app.NewApp()
+	myApp := app.NewApp(os.Args[0] + ".env")
 	myAppStop := myApp.Start()
 
 	defer func() {
