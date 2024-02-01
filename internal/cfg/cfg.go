@@ -23,7 +23,7 @@ func NewCfgEnv(cfgfilename string) *T.CfgEnv {
 	log := L.NewLogFprintf(cfg)
 	parseIpFromInterfaces(cfg, log)
 	if _, err := os.Stat(cfgfilename); err == nil {
-		parseFileDotEnv(cfgfilename, cfg, log)
+		parseFileDotEnvVars(cfgfilename, cfg, log)
 	}
 	parseOsEnvVars(cfg, log)
 	return cfg
@@ -42,7 +42,7 @@ func parseOsEnvVars(cfg *T.CfgEnv, log T.ILog) {
 	}
 }
 
-func parseFileDotEnv(filename string, cfg *T.CfgEnv, log T.ILog) {
+func parseFileDotEnvVars(filename string, cfg *T.CfgEnv, log T.ILog) {
 	f, err := os.Open(filename)
 	if err != nil {
 		log.LogError(err, "(CfgEnv).parseFileDotEnv(): error with opening cfg file")
