@@ -18,11 +18,11 @@ func NewCfgEnv(cfgfilename string) *T.CfgEnv {
 		SL_LOG_LEVEL:   "INFO",
 		SL_HTTP_IP:     "localhost",
 		SL_HTTP_PORT:   ":8080",
-		SL_GRPC_PORT:   ":8181",
+		SL_GRPC_PORT:   ":8082",
 	}
 	log := L.NewLogFprintf(cfg)
 	parseIpFromInterfaces(cfg, log)
-	if _, err := os.Stat(cfgfilename); err == nil {
+	if len(cfgfilename) != 0 {
 		parseFileDotEnvVars(cfgfilename, cfg, log)
 	}
 	parseOsEnvVars(cfg, log)

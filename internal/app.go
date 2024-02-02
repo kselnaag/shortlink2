@@ -16,8 +16,8 @@ type App struct {
 	cfg  *T.CfgEnv
 }
 
-func NewApp(cfgfilaname string) *App {
-	cfg := C.NewCfgEnv(cfgfilaname)
+func NewApp(cfgfilename string) *App {
+	cfg := C.NewCfgEnv(cfgfilename)
 	log := L.NewLogFprintf(cfg)
 	// db := D.NewSQLite(cfg, log)
 	db := D.NewDBMock(cfg, log)
