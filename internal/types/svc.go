@@ -1,7 +1,7 @@
 package types
 
 type ISvcShortLink2 interface {
-	GetLinkLongFromLinkShort(hash string) string
-	SetLinkPair(link string) bool
+	GetLinkPair(hash string) string
+	SetLinkPair(link string) string
 	DelLinkPair(hash string) bool
 }

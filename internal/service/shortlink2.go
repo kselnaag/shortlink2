@@ -20,13 +20,17 @@ func NewSvcShortLink2(db T.IDB, log T.ILog) *SvcShortLink2 {
 	}
 }
 
-func (s *SvcShortLink2) GetLinkLongFromLinkShort(hash string) string {
+func (s *SvcShortLink2) GetLinkPair(hash string) string {
 	return s.db.LoadLinkPair(hash)
 }
 
-func (s *SvcShortLink2) SetLinkPair(link string) bool {
+func (s *SvcShortLink2) SetLinkPair(link string) string {
 	hash := calcLinkShort(link)
-	return s.db.SaveLinkPair(hash, link)
+	if s.db.SaveLinkPair(hash, link) {
+		return hash
+	} else {
+		return ""
+	}
 }
 
 func (s *SvcShortLink2) DelLinkPair(hash string) bool {
