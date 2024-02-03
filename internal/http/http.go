@@ -17,12 +17,6 @@ import (
 
 var _ T.IHTTPServer = (*HTTPServerNet)(nil)
 
-type HTTPMess struct {
-	Method string `json:"M"`
-	Hash   string `json:"H"`
-	Link   string `json:"L"`
-}
-
 type HTTPServerNet struct {
 	hsrv *http.Server
 	svc  T.ISvcShortLink2
@@ -62,7 +56,7 @@ func (hns *HTTPServerNet) getRedirect(w http.ResponseWriter, r *http.Request) {
 }
 
 func (hns *HTTPServerNet) postLoad(w http.ResponseWriter, r *http.Request) {
-	mess := HTTPMess{}
+	mess := T.HTTPMess{}
 	if err := json.NewDecoder(r.Body).Decode(&mess); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -77,7 +71,7 @@ func (hns *HTTPServerNet) postLoad(w http.ResponseWriter, r *http.Request) {
 }
 
 func (hns *HTTPServerNet) postSave(w http.ResponseWriter, r *http.Request) {
-	mess := HTTPMess{}
+	mess := T.HTTPMess{}
 	if err := json.NewDecoder(r.Body).Decode(&mess); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -92,7 +86,7 @@ func (hns *HTTPServerNet) postSave(w http.ResponseWriter, r *http.Request) {
 }
 
 func (hns *HTTPServerNet) postDelete(w http.ResponseWriter, r *http.Request) {
-	mess := HTTPMess{}
+	mess := T.HTTPMess{}
 	if err := json.NewDecoder(r.Body).Decode(&mess); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
