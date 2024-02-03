@@ -46,46 +46,64 @@ func NewHTTPServerNet(svc T.ISvcShortLink2, log T.ILog, cfg *T.CfgEnv) *HTTPServ
 }
 
 /*
-	curl -i -X POST localhost:8080/save -H 'Content-Type: application/json' -H 'Accept: application/json' -d '{"IsResp":false,"Mode":"client","Body":"http://lib.ru/PROZA/"}'
+	curl -i -X POST localhost:8080/save -H 'Content-Type: application/json' -d '{"M":"","H":"","L":""}'
 	Cache-Control: no-cache | Content-Type: text/html; charset=utf-8
 	(5clp60)http://lib.ru (dhiu79)http://google.ru (8b4s29)http://lib.ru/PROZA/
 */
 
 func (hns *HTTPServerNet) getRedirect(w http.ResponseWriter, r *http.Request) {
 	hash, _ := strings.CutPrefix(r.URL.Path, "/")
-	link := hns.svc.GetLinkLongFromLinkShort(hash)
+	link := hns.svc.GetLinkPair(hash)
 	if len(link) == 0 {
-		http.Error(w, "", http.StatusNotFound)
-	} else {
-		http.Redirect(w, r, link, http.StatusFound)
+		http.Error(w, "empty", http.StatusNotFound)
+		return
 	}
+	http.Redirect(w, r, link, http.StatusFound)
 }
 
 func (hns *HTTPServerNet) postLoad(w http.ResponseWriter, r *http.Request) {
 	mess := HTTPMess{}
-	err := json.NewDecoder(r.Body).Decode(&mess)
-	if err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&mess); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	r.Body.Close()
-	link := hns.svc.GetLinkLongFromLinkShort(mess.Hash)
+	link := hns.svc.GetLinkPair(mess.Hash)
 	if len(link) == 0 {
-		http.Error(w, "", http.StatusNotFound)
-	} else {
-		w.Header().Add("Content-Type", "application/json")
-		fmt.Fprintf(w, `{"M":"200","H":"%s","L":"%s"}`+"\n", mess.Hash, link)
+		http.Error(w, "empty", http.StatusNotFound)
+		return
 	}
+	w.Header().Add("Content-Type", "application/json")
+	fmt.Fprintf(w, `{"M":"200","H":"%s","L":"%s"}`+"\n", mess.Hash, link)
 }
 
 func (hns *HTTPServerNet) postSave(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "save %s\n", r.URL.Path)
-	fmt.Println("save")
+	mess := HTTPMess{}
+	if err := json.NewDecoder(r.Body).Decode(&mess); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	hash := hns.svc.SetLinkPair(mess.Link)
+	if len(hash) == 0 {
+		http.Error(w, "not saved", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Add("Content-Type", "application/json")
+	fmt.Fprintf(w, `{"M":"200","H":"%s","L":"%s"}`+"\n", hash, mess.Link)
 }
 
 func (hns *HTTPServerNet) postDelete(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "delete %s\n", r.URL.Path)
-	fmt.Println("delete")
+	mess := HTTPMess{}
+	if err := json.NewDecoder(r.Body).Decode(&mess); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if !hns.svc.DelLinkPair(mess.Hash) {
+		http.Error(w, "not deleted", http.StatusInternalServerError)
+		return
+	} else {
+		w.Header().Add("Content-Type", "application/json")
+		fmt.Fprintf(w, `{"M":"200","H":"%s","L":""}`+"\n", mess.Hash)
+	}
 }
 
 func (hns *HTTPServerNet) handlers() *R.RouteHandler {
