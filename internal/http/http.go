@@ -91,12 +91,17 @@ func (hns *HTTPServerNet) postDelete(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	link := hns.svc.GetLinkPair(mess.Hash)
+	if len(link) == 0 {
+		http.Error(w, "empty", http.StatusNotFound)
+		return
+	}
 	if !hns.svc.DelLinkPair(mess.Hash) {
 		http.Error(w, "not deleted", http.StatusInternalServerError)
 		return
 	} else {
 		w.Header().Add("Content-Type", "application/json")
-		fmt.Fprintf(w, `{"M":"200","H":"%s","L":""}`+"\n", mess.Hash)
+		fmt.Fprintf(w, `{"M":"200","H":"%s","L":"%s"}`+"\n", mess.Hash, link)
 	}
 }
 
