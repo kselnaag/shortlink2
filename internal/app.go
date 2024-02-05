@@ -16,11 +16,11 @@ type App struct {
 	cfg  *T.CfgEnv
 }
 
-func NewApp(cfgfilename string) *App {
-	cfg := C.NewCfgEnv(cfgfilename)
+func NewApp() *App {
+	cfg := C.NewCfgEnv("shortlink2.env")
 	log := L.NewLogFprintf(cfg)
-	// db := D.NewSQLite(cfg, log)
-	db := D.NewDBMock(cfg, log)
+	// db := D.NewDBsqlite(cfg, log, "db/sqlite.db")
+	db := D.NewDBmock(cfg, log)
 	svcsl2 := S.NewSvcShortLink2(db, log)
 	hsrv := H.NewHTTPServerNet(svcsl2, log, cfg)
 	return &App{

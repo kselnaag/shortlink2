@@ -13,11 +13,7 @@ func main() {
 	// debug.SetGCPercent(100)
 	// debug.SetMemoryLimit(2 831 155 200)
 
-	cfgfilename := os.Args[0] + ".env"
-	if _, err := os.Stat(cfgfilename); err != nil {
-		cfgfilename = ""
-	}
-	myApp := app.NewApp(cfgfilename)
+	myApp := app.NewApp()
 	myAppStop := myApp.Start()
 	defer func() {
 		if err := recover(); err != nil {
