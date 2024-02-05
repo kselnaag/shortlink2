@@ -6,3 +6,8 @@ type IDB interface {
 	DeleteLinkPair(hash string) bool
 	ConnectDB() func(e error)
 }
+
+type DBMess struct {
+	Hash string
+	Link string
+}

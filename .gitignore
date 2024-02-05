@@ -1,4 +1,5 @@
 **/bin/shortlink2
 **/bin/shortlink
+**/bin/db
 **/.vscode
 go.work

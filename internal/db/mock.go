@@ -5,28 +5,28 @@ import (
 	"sync"
 )
 
-var _ T.IDB = (*DBMock)(nil)
+var _ T.IDB = (*DBmock)(nil)
 
-type DBMock struct {
+type DBmock struct {
 	log  T.ILog
 	cfg  *T.CfgEnv
 	db   map[string]string
 	rwmu sync.RWMutex
 }
 
-func NewDBMock(cfg *T.CfgEnv, log T.ILog) *DBMock {
+func NewDBmock(cfg *T.CfgEnv, log T.ILog) *DBmock {
 	mockdb := make(map[string]string, 8)
 	mockdb["5clp60"] = "http://lib.ru"
 	// dbmock.Store("5clp60", "http://lib.ru")
 	// dbmock.Store("dhiu79", "http://google.ru")
-	return &DBMock{
+	return &DBmock{
 		log: log,
 		cfg: cfg,
 		db:  mockdb,
 	}
 }
 
-func (m *DBMock) SaveLinkPair(hash, link string) bool {
+func (m *DBmock) SaveLinkPair(hash, link string) bool {
 	if (len(hash) == 0) || (len(link) == 0) {
 		return false
 	}
@@ -36,7 +36,7 @@ func (m *DBMock) SaveLinkPair(hash, link string) bool {
 	return true
 }
 
-func (m *DBMock) LoadLinkPair(hash string) string {
+func (m *DBmock) LoadLinkPair(hash string) string {
 	m.rwmu.RLock()
 	link, ok := m.db[hash]
 	m.rwmu.RUnlock()
@@ -46,18 +46,18 @@ func (m *DBMock) LoadLinkPair(hash string) string {
 	return link
 }
 
-func (m *DBMock) DeleteLinkPair(hash string) bool {
+func (m *DBmock) DeleteLinkPair(hash string) bool {
 	m.rwmu.Lock()
 	delete(m.db, hash)
 	m.rwmu.Unlock()
 	return true
 }
 
-func (m *DBMock) ConnectDB() func(e error) {
+func (m *DBmock) ConnectDB() func(e error) {
 	m.log.LogInfo("mock db connected")
 	return func(e error) {
 		if e != nil {
-			m.log.LogError(e, "DBMock.Connect(): db graceful_shutdown error")
+			m.log.LogError(e, "DBmock.Connect(): db graceful_shutdown error")
 		}
 		m.log.LogInfo("mock db disconnected")
 	}
