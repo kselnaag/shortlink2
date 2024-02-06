@@ -70,11 +70,11 @@ func (s *DBsqlite) InitDB() {
 	}
 	_, err1 := s.db.Exec("CREATE TABLE IF NOT EXISTS shortlink (hash TEXT PRIMARY KEY, link TEXT NOT NULL, CHECK (link <> ''))")
 	if err1 != nil {
-		s.log.LogError(err1, "DBsqlite.InitDB(): unable to create table")
+		s.log.LogError(err1, "DBsqlite.InitDB(): unable to CREATE TABLE")
 	}
 	_, err2 := s.db.Exec("INSERT INTO shortlink VALUES ('5clp60', 'http://lib.ru'); INSERT INTO shortlink VALUES ('dhiu79', 'http://google.ru');")
 	if err2 != nil {
-		s.log.LogError(err2, "DBsqlite.InitDB(): unable to insert values")
+		s.log.LogError(err2, "DBsqlite.InitDB(): unable to INSERT values")
 	}
 }
 
@@ -88,10 +88,10 @@ func (s *DBsqlite) ConnectDB() func(e error) {
 	s.log.LogInfo("DBsqlite connected")
 	return func(e error) {
 		if err := s.db.Close(); err != nil {
-			s.log.LogError(err, "DBsqlite.ConnectDB(): db graceful_shutdown with error")
+			s.log.LogError(err, "DBsqlite.ConnectDB(): db graceful_shutdown error")
 		}
 		if e != nil {
-			s.log.LogError(e, "DBsqlite.ConnectDB(): db graceful_shutdown error")
+			s.log.LogError(e, "DBsqlite.ConnectDB(): db graceful_shutdown with error")
 		}
 		s.db = nil
 		s.log.LogInfo("DBsqlite disconnected")
