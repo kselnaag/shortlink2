@@ -1,6 +1,8 @@
 package app
 
 import (
+	"os"
+	"path/filepath"
 	C "shortlink2/internal/cfg"
 	D "shortlink2/internal/db"
 	H "shortlink2/internal/http"
@@ -17,9 +19,9 @@ type App struct {
 }
 
 func NewApp() *App {
-	cfg := C.NewCfgEnvMap("shortlink2.env").Parse()
+	cfg := C.NewCfgEnvMap(makeFullPath("shortlink2.env")).Parse()
 	log := L.NewLogFprintf(cfg)
-	db := D.NewDBsqlite(cfg, log, "db/sqlite.db")
+	db := D.NewDBsqlite(cfg, log, makeFullPath("db/sqlite.db"))
 	// db := D.NewDBmock(cfg, log)
 	svcsl2 := S.NewSvcShortLink2(db, log)
 	hsrv := H.NewHTTPServerNet(svcsl2, log, cfg)
@@ -44,4 +46,15 @@ func (a *App) Start() func(err error) {
 			a.log.LogInfo(a.cfg.GetVal(T.SL_APP_NAME) + " app stoped")
 		}
 	}
+}
+
+func makeFullPath(fname string) string {
+	if len(fname) != 0 {
+		exec, err := os.Executable() // takeExecutableFullPath
+		if err != nil {
+			return ""
+		}
+		return filepath.Join(filepath.Dir(exec), fname)
+	}
+	return ""
 }

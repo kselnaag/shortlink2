@@ -2,8 +2,6 @@ package db
 
 import (
 	"database/sql"
-	"os"
-	"path/filepath"
 	T "shortlink2/internal/types"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -84,12 +82,6 @@ func (s *DBsqlite) InitDB() {
 }
 
 func (s *DBsqlite) ConnectDB() func(e error) {
-	exec, err := os.Executable() // LoadExecutableFullPath
-	if err != nil {
-		s.log.LogError(err, "DBsqlite.ConnectDB(): os.Executable(): executable path not found")
-		return func(e error) {}
-	}
-	s.dbpath = filepath.Join(filepath.Dir(exec), s.dbpath)
 	db, err := sql.Open("sqlite3", s.dbpath)
 	if err != nil {
 		s.log.LogError(err, "DBsqlite.ConnectDB(): unable to connect")
@@ -111,24 +103,9 @@ func (s *DBsqlite) ConnectDB() func(e error) {
 }
 
 /* rows, err1 := s.db.Query("SELECT hash, link FROM shortlink WHERE hash = ?", hash)
-if err1 != nil {
-	s.log.LogError(err1, "DBsqlite.LoadLinkPair(): unable to select values")
-	return ""
-} else {
-	defer rows.Close()
-}
-arr := make([]T.DBMess, 0, 2)
 for rows.Next() {
 	var pair T.DBMess
 	err2 := rows.Scan(&(pair.Hash), &(pair.Link))
-	if err2 != nil {
-		s.log.LogError(err2, "DBsqlite.LoadLinkPair(): unable to scan row")
-	} else {
-		arr = append(arr, pair)
-	}
 }
 err3 := rows.Err()
-if err3 != nil {
-	s.log.LogError(err3, "DBsqlite.LoadLinkPair(): unable to get row")
-	return ""
 } */

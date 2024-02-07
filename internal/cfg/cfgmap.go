@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"net"
 	"os"
-	"path/filepath"
 	"regexp"
 	L "shortlink2/internal/log"
 	T "shortlink2/internal/types"
@@ -36,11 +35,6 @@ func (c *CfgEnvMap) Parse() T.ICfg {
 	log := L.NewLogFprintf(c)
 	c.parseIpFromInterface(log)
 	if len(c.fname) != 0 {
-		exec, err := os.Executable() // LoadExecutableFullPath
-		if err != nil {
-			log.LogError(err, "CfgEnvMap.Parse(): os.Executable(): executable path not found")
-		}
-		c.fname = filepath.Join(filepath.Dir(exec), c.fname)
 		if _, err := os.Stat(c.fname); err == nil {
 			c.parseFileDotEnvVars(log)
 		}
