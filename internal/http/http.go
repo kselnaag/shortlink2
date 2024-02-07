@@ -40,7 +40,7 @@ func NewHTTPServerNet(svc T.ISvcShortLink2, log T.ILog, cfg T.ICfg) *HTTPServerN
 }
 
 /*
-	curl -i -X POST localhost:8080/load -H 'Content-Type: application/json' -d '{"M":"","H":"","L":""}'
+	curl -i -X POST localhost:8080/load -H 'Content-Type: application/json' -d '{"M":"load","H":"5clp60","L":""}'
 	Cache-Control: no-cache | Content-Type: text/html; charset=utf-8
 	(5clp60)http://lib.ru (dhiu79)http://google.ru (8b4s29)http://lib.ru/PROZA/
 */
