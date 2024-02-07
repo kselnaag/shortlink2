@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"net"
 	"os"
+	"path/filepath"
 	"regexp"
 	L "shortlink2/internal/log"
 	T "shortlink2/internal/types"
@@ -35,7 +36,14 @@ func (c *CfgEnvMap) Parse() T.ICfg {
 	log := L.NewLogFprintf(c)
 	c.parseIpFromInterface(log)
 	if len(c.fname) != 0 {
-		c.parseFileDotEnvVars(log)
+		exec, err := os.Executable() // LoadExecutableFullPath
+		if err != nil {
+			log.LogError(err, "CfgEnvMap.Parse(): os.Executable(): executable path not found")
+		}
+		c.fname = filepath.Join(filepath.Dir(exec), c.fname)
+		if _, err := os.Stat(c.fname); err == nil {
+			c.parseFileDotEnvVars(log)
+		}
 	}
 	c.parseOsEnvVars(log)
 	return c
@@ -63,7 +71,9 @@ func (c *CfgEnvMap) parseFileDotEnvVars(log T.ILog) {
 		log.LogError(err, "(CfgEnvMap).parseFileDotEnvVars(): error while opening cfg file")
 		return
 	}
+	log.LogInfo("load config from file: %s", c.fname)
 	defer f.Close()
+
 	pattern := regexp.MustCompile("^[0-9A-Za-z_:]+=[0-9A-Za-z_:]+")
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
