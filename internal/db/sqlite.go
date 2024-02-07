@@ -11,12 +11,12 @@ var _ T.IDB = (*DBsqlite)(nil)
 
 type DBsqlite struct {
 	log    T.ILog
-	cfg    *T.CfgEnv
+	cfg    T.ICfg
 	dbpath string
 	db     *sql.DB
 }
 
-func NewDBsqlite(cfg *T.CfgEnv, log T.ILog, dbpath string) *DBsqlite {
+func NewDBsqlite(cfg T.ICfg, log T.ILog, dbpath string) *DBsqlite {
 	return &DBsqlite{
 		log:    log,
 		cfg:    cfg,

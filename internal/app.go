@@ -13,11 +13,11 @@ type App struct {
 	hsrv T.IHTTPServer
 	db   T.IDB
 	log  T.ILog
-	cfg  *T.CfgEnv
+	cfg  T.ICfg
 }
 
 func NewApp() *App {
-	cfg := C.NewCfgEnv("shortlink2.env")
+	cfg := C.NewCfgEnvMap("shortlink2.env").Parse()
 	log := L.NewLogFprintf(cfg)
 	// db := D.NewDBsqlite(cfg, log, "db/sqlite.db")
 	db := D.NewDBmock(cfg, log)
@@ -34,14 +34,14 @@ func NewApp() *App {
 func (a *App) Start() func(err error) {
 	dbShutdown := a.db.ConnectDB()
 	hsrvShutdown := a.hsrv.Run()
-	a.log.LogInfo(a.cfg.SL_APP_NAME + " app started")
+	a.log.LogInfo(a.cfg.GetVal(T.SL_APP_NAME) + " app started")
 	return func(err error) {
 		hsrvShutdown(err)
 		dbShutdown(err)
 		if err != nil {
-			a.log.LogError(err, a.cfg.SL_APP_NAME+" app stoped with error")
+			a.log.LogError(err, a.cfg.GetVal(T.SL_APP_NAME)+" app stoped with error")
 		} else {
-			a.log.LogInfo(a.cfg.SL_APP_NAME + " app stoped")
+			a.log.LogInfo(a.cfg.GetVal(T.SL_APP_NAME) + " app stoped")
 		}
 	}
 }

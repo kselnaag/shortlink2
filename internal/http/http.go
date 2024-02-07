@@ -21,11 +21,11 @@ type HTTPServerNet struct {
 	hsrv *http.Server
 	svc  T.ISvcShortLink2
 	log  T.ILog
-	cfg  *T.CfgEnv
+	cfg  T.ICfg
 	fs   http.FileSystem
 }
 
-func NewHTTPServerNet(svc T.ISvcShortLink2, log T.ILog, cfg *T.CfgEnv) *HTTPServerNet {
+func NewHTTPServerNet(svc T.ISvcShortLink2, log T.ILog, cfg T.ICfg) *HTTPServerNet {
 	subFS, err := fs.Sub(W.StaticFS, "data")
 	if err != nil {
 		log.LogError(err, "staticFS: embedFS error")
@@ -122,7 +122,7 @@ func (hns *HTTPServerNet) handlers() *R.RouteHandler {
 
 func (hns *HTTPServerNet) Run() func(e error) {
 	hns.hsrv = &http.Server{
-		Addr:           hns.cfg.SL_HTTP_PORT,
+		Addr:           hns.cfg.GetVal(T.SL_HTTP_PORT),
 		Handler:        hns.handlers(),
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,

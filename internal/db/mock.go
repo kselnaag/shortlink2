@@ -9,12 +9,12 @@ var _ T.IDB = (*DBmock)(nil)
 
 type DBmock struct {
 	log  T.ILog
-	cfg  *T.CfgEnv
+	cfg  T.ICfg
 	db   map[string]string
 	rwmu sync.RWMutex
 }
 
-func NewDBmock(cfg *T.CfgEnv, log T.ILog) *DBmock {
+func NewDBmock(cfg T.ICfg, log T.ILog) *DBmock {
 	mockdb := make(map[string]string, 8)
 	mockdb["5clp60"] = "http://lib.ru"
 	// dbmock.Store("5clp60", "http://lib.ru")
@@ -57,7 +57,7 @@ func (m *DBmock) ConnectDB() func(e error) {
 	m.log.LogInfo("mock db connected")
 	return func(e error) {
 		if e != nil {
-			m.log.LogError(e, "DBmock.Connect(): db graceful_shutdown error")
+			m.log.LogError(e, "DBmock.Connect(): db graceful_shutdown with error")
 		}
 		m.log.LogInfo("mock db disconnected")
 	}

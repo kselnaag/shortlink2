@@ -15,11 +15,11 @@ type LogFprintf struct {
 	svc    string
 }
 
-func NewLogFprintf(cfg *T.CfgEnv) *LogFprintf {
-	host := cfg.SL_HTTP_IP + cfg.SL_HTTP_PORT + cfg.SL_GRPC_PORT
-	svc := cfg.SL_APP_NAME + cfg.SL_APP_PROTOCS
+func NewLogFprintf(cfg T.ICfg) *LogFprintf {
+	host := cfg.GetVal(T.SL_HTTP_IP) + cfg.GetVal(T.SL_HTTP_PORT) + cfg.GetVal(T.SL_GRPC_PORT)
+	svc := cfg.GetVal(T.SL_APP_NAME) + cfg.GetVal(T.SL_APP_PROTOCS)
 	var lvl T.LogLevel
-	switch cfg.SL_LOG_LEVEL {
+	switch cfg.GetVal(T.SL_LOG_LEVEL) {
 	case T.StrTrace:
 		lvl = T.Trace
 	case T.StrDebug:
