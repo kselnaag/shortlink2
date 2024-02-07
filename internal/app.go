@@ -19,8 +19,8 @@ type App struct {
 func NewApp() *App {
 	cfg := C.NewCfgEnvMap("shortlink2.env").Parse()
 	log := L.NewLogFprintf(cfg)
-	// db := D.NewDBsqlite(cfg, log, "db/sqlite.db")
-	db := D.NewDBmock(cfg, log)
+	db := D.NewDBsqlite(cfg, log, "db/sqlite.db")
+	// db := D.NewDBmock(cfg, log)
 	svcsl2 := S.NewSvcShortLink2(db, log)
 	hsrv := H.NewHTTPServerNet(svcsl2, log, cfg)
 	return &App{
