@@ -71,7 +71,7 @@ func (c *CfgEnvMap) parseFileDotEnvVars(log T.ILog) {
 		log.LogError(err, "(CfgEnvMap).parseFileDotEnvVars(): error while opening cfg file")
 		return
 	}
-	log.LogInfo("load config from file: %s", c.fname)
+	log.LogDebug("load config from file: %s", c.fname)
 	defer f.Close()
 
 	pattern := regexp.MustCompile("^[0-9A-Za-z_:]+=[0-9A-Za-z_:]+")
