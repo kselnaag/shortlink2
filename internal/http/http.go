@@ -40,7 +40,7 @@ func NewHTTPServerNet(svc T.ISvcShortLink2, log T.ILog, cfg T.ICfg) *HTTPServerN
 }
 
 /*
-	curl -i -X POST localhost:8080/save -H 'Content-Type: application/json' -d '{"M":"","H":"","L":""}'
+	curl -i -X POST localhost:8080/load -H 'Content-Type: application/json' -d '{"M":"","H":"","L":""}'
 	Cache-Control: no-cache | Content-Type: text/html; charset=utf-8
 	(5clp60)http://lib.ru (dhiu79)http://google.ru (8b4s29)http://lib.ru/PROZA/
 */
@@ -49,7 +49,7 @@ func (hns *HTTPServerNet) getRedirect(w http.ResponseWriter, r *http.Request) {
 	hash, _ := strings.CutPrefix(r.URL.Path, "/")
 	link := hns.svc.GetLinkPair(hash)
 	if len(link) == 0 {
-		http.Error(w, "empty", http.StatusNotFound)
+		http.Error(w, "", http.StatusNotFound)
 		return
 	}
 	http.Redirect(w, r, link, http.StatusFound)
@@ -63,7 +63,7 @@ func (hns *HTTPServerNet) postLoad(w http.ResponseWriter, r *http.Request) {
 	}
 	link := hns.svc.GetLinkPair(mess.Hash)
 	if len(link) == 0 {
-		http.Error(w, "empty", http.StatusNotFound)
+		http.Error(w, "", http.StatusNotFound)
 		return
 	}
 	w.Header().Add("Content-Type", "application/json")
@@ -93,7 +93,7 @@ func (hns *HTTPServerNet) postDelete(w http.ResponseWriter, r *http.Request) {
 	}
 	link := hns.svc.GetLinkPair(mess.Hash)
 	if len(link) == 0 {
-		http.Error(w, "empty", http.StatusNotFound)
+		http.Error(w, "", http.StatusNotFound)
 		return
 	}
 	if !hns.svc.DelLinkPair(mess.Hash) {
