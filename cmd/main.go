@@ -37,7 +37,4 @@ func main() {
 			os.Exit(0)
 		}
 	}
-	/* 	sig := make(chan os.Signal, 1)
-	   	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGQUIT)
-	   	<-sig */
 }

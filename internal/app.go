@@ -19,9 +19,10 @@ type App struct {
 }
 
 func NewApp() *App {
-	cfg := C.NewCfgEnvMap(makeFullPath("shortlink2.env")).Parse()
+	dir, file := execPathAndFname()
+	cfg := C.NewCfgEnvMap(filepath.Join(dir, file, ".env")).Parse()
 	log := L.NewLogFprintf(cfg)
-	db := D.NewDBsqlite(cfg, log, makeFullPath("db/sqlite.db"))
+	db := D.NewDBsqlite(cfg, log, filepath.Join(dir, "db/sqlite.db"))
 	// db := D.NewDBmock(cfg, log)
 	svcsl2 := S.NewSvcShortLink2(db, log)
 	hsrv := H.NewHTTPServerNet(svcsl2, log, cfg)
@@ -48,10 +49,7 @@ func (a *App) Start() func(err error) {
 	}
 }
 
-func makeFullPath(fname string) string {
-	if len(fname) != 0 {
-		exec, _ := os.Executable() // takeExecutableFullPath
-		return filepath.Join(filepath.Dir(exec), fname)
-	}
-	return ""
+func execPathAndFname() (string, string) {
+	path, _ := os.Executable()
+	return filepath.Split(path)
 }
