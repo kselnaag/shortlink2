@@ -2,6 +2,7 @@ package log
 
 import (
 	"fmt"
+	"io"
 	"os"
 	T "shortlink2/internal/types"
 	"time"
@@ -10,12 +11,16 @@ import (
 var _ T.ILog = (*LogFprintf)(nil)
 
 type LogFprintf struct {
-	loglvl T.LogLevel
-	host   string
-	svc    string
+	loglvl  T.LogLevel
+	host    string
+	svc     string
+	targets []io.Writer
 }
 
-func NewLogFprintf(cfg T.ICfg) *LogFprintf {
+func NewLogFprintf(cfg T.ICfg, targets ...io.Writer) *LogFprintf {
+	if len(targets) == 0 {
+		targets = append(targets, os.Stderr)
+	}
 	host := cfg.GetVal(T.SL_HTTP_IP) + cfg.GetVal(T.SL_HTTP_PORT)
 	svc := cfg.GetVal(T.SL_APP_NAME)
 	var lvl T.LogLevel
@@ -38,55 +43,58 @@ func NewLogFprintf(cfg T.ICfg) *LogFprintf {
 		lvl = T.NoLog
 	}
 	return &LogFprintf{
-		loglvl: lvl,
-		host:   host,
-		svc:    svc,
+		loglvl:  lvl,
+		host:    host,
+		svc:     svc,
+		targets: targets,
 	}
 }
 
-func logMessage(lvl, host, svc, mess string) {
+func (l *LogFprintf) logMessage(lvl, host, svc, mess string) {
 	timenow := time.Now().Format(time.RFC3339Nano)
-	fmt.Fprintf(os.Stderr, `{"T":"%s","L":"%s","H":"%s","S":"%s","M":"%s"}`+"\n", timenow, lvl, host, svc, mess)
+	for _, point := range l.targets {
+		fmt.Fprintf(point, `{"T":"%s","L":"%s","H":"%s","S":"%s","M":"%s"}`+"\n", timenow, lvl, host, svc, mess)
+	}
 }
 
 func (l *LogFprintf) LogTrace(format string, v ...any) {
 	if l.loglvl <= T.Trace {
-		logMessage(T.StrTrace, l.host, l.svc, fmt.Sprintf(format, v...))
+		l.logMessage(T.StrTrace, l.host, l.svc, fmt.Sprintf(format, v...))
 	}
 }
 
 func (l *LogFprintf) LogDebug(format string, v ...any) {
 	if l.loglvl <= T.Debug {
-		logMessage(T.StrDebug, l.host, l.svc, fmt.Sprintf(format, v...))
+		l.logMessage(T.StrDebug, l.host, l.svc, fmt.Sprintf(format, v...))
 	}
 }
 
 func (l *LogFprintf) LogInfo(format string, v ...any) {
 	if l.loglvl <= T.Info {
-		logMessage(T.StrInfo, l.host, l.svc, fmt.Sprintf(format, v...))
+		l.logMessage(T.StrInfo, l.host, l.svc, fmt.Sprintf(format, v...))
 	}
 }
 
 func (l *LogFprintf) LogWarn(format string, v ...any) {
 	if l.loglvl <= T.Warn {
-		logMessage(T.StrWarn, l.host, l.svc, fmt.Sprintf(format, v...))
+		l.logMessage(T.StrWarn, l.host, l.svc, fmt.Sprintf(format, v...))
 	}
 }
 
 func (l *LogFprintf) LogError(err error) {
 	if l.loglvl <= T.Error {
-		logMessage(T.StrError, l.host, l.svc, err.Error())
+		l.logMessage(T.StrError, l.host, l.svc, err.Error())
 	}
 }
 
 func (l *LogFprintf) LogPanic(err error) {
 	if l.loglvl <= T.Panic {
-		logMessage(T.StrPanic, l.host, l.svc, err.Error())
+		l.logMessage(T.StrPanic, l.host, l.svc, err.Error())
 	}
 }
 
 func (l *LogFprintf) LogFatal(err error) {
 	if l.loglvl <= T.Fatal {
-		logMessage(T.StrFatal, l.host, l.svc, err.Error())
+		l.logMessage(T.StrFatal, l.host, l.svc, err.Error())
 	}
 }
