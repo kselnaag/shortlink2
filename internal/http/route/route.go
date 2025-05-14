@@ -1,7 +1,7 @@
 package route
 
 import (
-	"errors"
+	"fmt"
 	"net/http"
 	"regexp"
 	T "shortlink2/internal/types"
@@ -50,7 +50,7 @@ func NewRouteHandler(middlewares *[]*Middleware, routes []*Route, staticfs http.
 func (rh *RouteHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if err := recover(); err != nil {
-			rh.log.LogError(err.(error), "500: some handler panics")
+			rh.log.LogError(fmt.Errorf("%s: %w", "500: some handler panics", err.(error)))
 			http.Error(w, "500 internal server error", http.StatusInternalServerError)
 		}
 	}()
@@ -62,7 +62,7 @@ func (rh *RouteHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(rh.routes) == 0 {
-		rh.log.LogError(errors.New("500 internal server error"), "empty routes")
+		rh.log.LogError(fmt.Errorf("%s: %s", "500 internal server error", "empty routes"))
 		http.Error(w, "500 internal server error", http.StatusInternalServerError)
 		return
 	}

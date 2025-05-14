@@ -5,20 +5,20 @@ type ILog interface {
 	LogDebug(format string, v ...any)
 	LogInfo(format string, v ...any)
 	LogWarn(format string, v ...any)
-	LogError(err error, format string, v ...any)
-	LogFatal(err error, format string, v ...any)
-	LogPanic(err error, format string, v ...any)
+	LogError(err error)
+	LogFatal(err error)
+	LogPanic(err error)
 }
 
 const (
-	StrTrace   = "TRACE"
-	StrDebug   = "DEBUG"
-	StrInfo    = "INFO"
-	StrWarn    = "WARN"
-	StrError   = "ERROR"
-	StrFatal   = "FATAL"
-	StrPanic   = "PANIC"
-	StrLOGSOFF = "LOGSOFF"
+	StrTrace = "TRACE"
+	StrDebug = "DEBUG"
+	StrInfo  = "INFO"
+	StrWarn  = "WARN"
+	StrError = "ERROR"
+	StrPanic = "PANIC"
+	StrFatal = "FATAL"
+	StrNoLog = "NOLOG"
 )
 
 type LogLevel int8
@@ -29,7 +29,7 @@ const (
 	Info
 	Warn
 	Error
-	Fatal
 	Panic
-	Logsoff
+	Fatal
+	NoLog
 )

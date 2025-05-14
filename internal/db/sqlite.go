@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"fmt"
 	T "shortlink2/internal/types"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -26,12 +27,12 @@ func NewDBsqlite(cfg T.ICfg, log T.ILog, dbpath string) *DBsqlite {
 
 func (s *DBsqlite) SaveLinkPair(hash, link string) bool {
 	if err := s.db.Ping(); err != nil {
-		s.log.LogError(err, "DBsqlite.SaveLinkPair(): unable to ping db")
+		s.log.LogError(fmt.Errorf("%s: %w", "DBsqlite.SaveLinkPair(): unable to ping db", err))
 		return false
 	}
 	_, err1 := s.db.Exec("INSERT INTO shortlink VALUES (?, ?)", hash, link)
 	if err1 != nil {
-		s.log.LogError(err1, "DBsqlite.SaveLinkPair(): unable to INSERT values")
+		s.log.LogError(fmt.Errorf("%s: %w", "DBsqlite.SaveLinkPair(): unable to INSERT values", err1))
 		return false
 	}
 	return true
@@ -39,7 +40,7 @@ func (s *DBsqlite) SaveLinkPair(hash, link string) bool {
 
 func (s *DBsqlite) LoadLinkPair(hash string) string {
 	if err := s.db.Ping(); err != nil {
-		s.log.LogError(err, "DBsqlite.LoadLinkPair(): unable to ping db")
+		s.log.LogError(fmt.Errorf("%s: %w", "DBsqlite.LoadLinkPair(): unable to ping db", err))
 		return ""
 	}
 	var pair T.DBMess
@@ -53,12 +54,12 @@ func (s *DBsqlite) LoadLinkPair(hash string) string {
 
 func (s *DBsqlite) DeleteLinkPair(hash string) bool {
 	if err := s.db.Ping(); err != nil {
-		s.log.LogError(err, "DBsqlite.DeleteLinkPair(): unable to ping db")
+		s.log.LogError(fmt.Errorf("%s: %w", "DBsqlite.DeleteLinkPair(): unable to ping db", err))
 		return false
 	}
 	_, err1 := s.db.Exec("DELETE FROM shortlink WHERE hash = ?", hash)
 	if err1 != nil {
-		s.log.LogError(err1, "DBsqlite.DeleteLinkPair(): unable to DELETE values")
+		s.log.LogError(fmt.Errorf("%s: %w", "DBsqlite.DeleteLinkPair(): unable to DELETE values", err1))
 		return false
 	}
 	return true
@@ -66,17 +67,17 @@ func (s *DBsqlite) DeleteLinkPair(hash string) bool {
 
 func (s *DBsqlite) InitDB() {
 	if err := s.db.Ping(); err != nil {
-		s.log.LogError(err, "DBsqlite.InitDB(): unable to ping db")
+		s.log.LogError(fmt.Errorf("%s: %w", "DBsqlite.InitDB(): unable to ping db", err))
 		return
 	}
 	_, err1 := s.db.Exec("CREATE TABLE IF NOT EXISTS shortlink (hash TEXT PRIMARY KEY, link TEXT NOT NULL, CHECK (link <> ''))")
 	if err1 != nil {
-		s.log.LogError(err1, "DBsqlite.InitDB(): unable to CREATE TABLE")
+		s.log.LogError(fmt.Errorf("%s: %w", "DBsqlite.InitDB(): unable to CREATE TABLE", err1))
 		return
 	}
 	_, err2 := s.db.Exec("INSERT INTO shortlink VALUES ('5clp60', 'http://lib.ru'); INSERT INTO shortlink VALUES ('dhiu79', 'http://google.ru');")
 	if err2 != nil {
-		s.log.LogError(err2, "DBsqlite.InitDB(): unable to INSERT values")
+		s.log.LogError(fmt.Errorf("%s: %w", "DBsqlite.InitDB(): unable to INSERT values", err2))
 		return
 	}
 }
@@ -84,7 +85,7 @@ func (s *DBsqlite) InitDB() {
 func (s *DBsqlite) ConnectDB() func(e error) {
 	db, err := sql.Open("sqlite3", s.dbpath)
 	if err != nil {
-		s.log.LogError(err, "DBsqlite.ConnectDB(): unable to connect")
+		s.log.LogError(fmt.Errorf("%s: %w", "DBsqlite.ConnectDB(): unable to connect", err))
 		return func(e error) {}
 	}
 	s.db = db
@@ -92,10 +93,10 @@ func (s *DBsqlite) ConnectDB() func(e error) {
 	s.log.LogInfo("DBsqlite connected")
 	return func(e error) {
 		if err := s.db.Close(); err != nil {
-			s.log.LogError(err, "DBsqlite.ConnectDB(): db graceful_shutdown error")
+			s.log.LogError(fmt.Errorf("%s: %w", "DBsqlite.ConnectDB(): db graceful_shutdown error", err))
 		}
 		if e != nil {
-			s.log.LogError(e, "DBsqlite.ConnectDB(): db graceful_shutdown with error")
+			s.log.LogError(fmt.Errorf("%s: %w", "DBsqlite.ConnectDB(): db graceful_shutdown with error", e))
 		}
 		s.db = nil
 		s.log.LogInfo("DBsqlite disconnected")

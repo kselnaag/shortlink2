@@ -28,7 +28,7 @@ type HTTPServerNet struct {
 func NewHTTPServerNet(svc T.ISvcShortLink2, log T.ILog, cfg T.ICfg) *HTTPServerNet {
 	subFS, err := fs.Sub(W.StaticFS, "data")
 	if err != nil {
-		log.LogError(err, "staticFS: embedFS error")
+		log.LogError(fmt.Errorf("%s: %w", "staticFS: embedFS error", err))
 	}
 	return &HTTPServerNet{
 		hsrv: nil,
@@ -132,12 +132,12 @@ func (hns *HTTPServerNet) Run() func(e error) {
 	go func() {
 		defer func() {
 			if err := recover(); err != nil {
-				hns.log.LogPanic(err.(error), "Run(): net/http server panic")
+				hns.log.LogPanic(fmt.Errorf("%s: %w", "Run(): net/http server panic", err.(error)))
 			}
 		}()
 		err := hns.hsrv.ListenAndServe()
 		if (err != nil) && (err != http.ErrServerClosed) {
-			hns.log.LogError(err, "Run(): net/http server closed with error")
+			hns.log.LogError(fmt.Errorf("%s: %w", "Run(): net/http server closed with error", err))
 			os.Exit(1)
 		}
 		if err == http.ErrServerClosed {
@@ -149,10 +149,10 @@ func (hns *HTTPServerNet) Run() func(e error) {
 		ctxSHD, cancelSHD := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancelSHD()
 		if err := hns.hsrv.Shutdown(ctxSHD); err != nil {
-			hns.log.LogError(err, "Run(): net/http server graceful_shutdown error")
+			hns.log.LogError(fmt.Errorf("%s: %w", "Run(): net/http server graceful_shutdown error", err))
 		}
 		if e != nil {
-			hns.log.LogError(e, "Run(): net/http server shutdown with error")
+			hns.log.LogError(fmt.Errorf("%s: %w", "Run(): net/http server shutdown with error", e))
 		}
 	}
 }

@@ -1,6 +1,7 @@
 package db
 
 import (
+	"fmt"
 	T "shortlink2/internal/types"
 	"sync"
 )
@@ -57,7 +58,8 @@ func (m *DBmock) ConnectDB() func(e error) {
 	m.log.LogInfo("mock db connected")
 	return func(e error) {
 		if e != nil {
-			m.log.LogError(e, "DBmock.Connect(): db graceful_shutdown with error")
+			// m.log.LogError(e, "DBmock.Connect(): db graceful_shutdown with error")
+			m.log.LogError(fmt.Errorf("%s: %w", "DBmock.Connect(): db graceful_shutdown with error", e))
 		}
 		m.log.LogInfo("mock db disconnected")
 	}

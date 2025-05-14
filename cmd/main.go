@@ -26,8 +26,7 @@ func main() {
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGHUP)
 	for {
-		s := <-sig
-		switch s {
+		switch <-sig {
 		case syscall.SIGHUP: // kill -SIGHUP <pid> // restarting all for sake of config reload
 			myAppStop(nil)
 			myApp = app.NewApp()

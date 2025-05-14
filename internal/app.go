@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	C "shortlink2/internal/cfg"
@@ -16,11 +17,13 @@ type App struct {
 	db   T.IDB
 	log  T.ILog
 	cfg  T.ICfg
+	dir  string
+	file string
 }
 
 func NewApp() *App {
 	dir, file := execPathAndFname()
-	cfg := C.NewCfgEnvMap(filepath.Join(dir, file, ".env")).Parse()
+	cfg := C.NewCfgEnvMap(dir, file).Parse()
 	log := L.NewLogFprintf(cfg)
 	db := D.NewDBsqlite(cfg, log, filepath.Join(dir, "db/sqlite.db"))
 	// db := D.NewDBmock(cfg, log)
@@ -31,20 +34,23 @@ func NewApp() *App {
 		db:   db,
 		log:  log,
 		cfg:  cfg,
+		dir:  dir,
+		file: file,
 	}
 }
 
 func (a *App) Start() func(err error) {
 	dbShutdown := a.db.ConnectDB()
 	hsrvShutdown := a.hsrv.Run()
-	a.log.LogInfo(a.cfg.GetVal(T.SL_APP_NAME) + " app started")
+	a.log.LogInfo(a.file + " app started")
 	return func(err error) {
 		hsrvShutdown(err)
 		dbShutdown(err)
 		if err != nil {
-			a.log.LogError(err, a.cfg.GetVal(T.SL_APP_NAME)+" app stoped with error")
+			// a.log.LogError(err, a.file+" app stoped with error")
+			a.log.LogError(fmt.Errorf("%s: %w", a.file+" app stoped with error", err))
 		} else {
-			a.log.LogInfo(a.cfg.GetVal(T.SL_APP_NAME) + " app stoped")
+			a.log.LogInfo(a.file + " app stoped")
 		}
 	}
 }

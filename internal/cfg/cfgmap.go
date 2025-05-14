@@ -2,8 +2,10 @@ package cfg
 
 import (
 	"bufio"
+	"fmt"
 	"net"
 	"os"
+	"path/filepath"
 	"regexp"
 	L "shortlink2/internal/log"
 	T "shortlink2/internal/types"
@@ -17,17 +19,15 @@ type CfgEnvMap struct {
 	fname string
 }
 
-func NewCfgEnvMap(cfgfilename string) *CfgEnvMap {
-	vals := make(map[string]string, 6) // default vals
-	vals[T.SL_APP_NAME] = "shortlink2"
-	vals[T.SL_APP_PROTOCS] = ":http:grpc"
-	vals[T.SL_LOG_LEVEL] = "INFO"
+func NewCfgEnvMap(dir, file string) *CfgEnvMap {
+	vals := make(map[string]string, 4)
+	vals[T.SL_APP_NAME] = file
+	vals[T.SL_LOG_LEVEL] = "INFO" // LOG levels: TRACE, DEBUG, INFO, WARN, ERROR, PANIC, FATAL, NOLOG(default if empty or mess)
 	vals[T.SL_HTTP_IP] = "localhost"
 	vals[T.SL_HTTP_PORT] = ":8080"
-	vals[T.SL_GRPC_PORT] = ":8082"
 	return &CfgEnvMap{
 		vals:  vals,
-		fname: cfgfilename,
+		fname: filepath.Join(dir, file, ".env"),
 	}
 }
 
@@ -44,10 +44,8 @@ func (c *CfgEnvMap) Parse() T.ICfg {
 }
 
 func (c *CfgEnvMap) GetVal(key string) string {
-	if val, ok := c.vals[key]; ok {
-		return val
-	}
-	return ""
+	val, _ := c.vals[key]
+	return val
 }
 
 func (c *CfgEnvMap) parseOsEnvVars(log T.ILog) {
@@ -62,13 +60,13 @@ func (c *CfgEnvMap) parseOsEnvVars(log T.ILog) {
 func (c *CfgEnvMap) parseFileDotEnvVars(log T.ILog) {
 	f, err := os.Open(c.fname)
 	if err != nil {
-		log.LogError(err, "(CfgEnvMap).parseFileDotEnvVars(): error while opening cfg file")
+		log.LogError(fmt.Errorf("%s: %w", "(CfgEnvMap).parseFileDotEnvVars(): error while opening cfg file", err))
 		return
 	}
 	log.LogDebug("load config from file: %s", c.fname)
 	defer f.Close()
 
-	pattern := regexp.MustCompile("^[0-9A-Za-z_:]+=[0-9A-Za-z_:]+")
+	pattern := regexp.MustCompile("^[0-9A-Za-z_]+=[0-9A-Za-z_:/.]+")
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		str := pattern.FindString(scanner.Text())
@@ -81,14 +79,15 @@ func (c *CfgEnvMap) parseFileDotEnvVars(log T.ILog) {
 		}
 	}
 	if err := scanner.Err(); err != nil {
-		log.LogError(err, "(CfgEnvMap).parseFileDotEnvVars(): error while reading cfg file")
+
+		log.LogError(fmt.Errorf("%s: %w", "(CfgEnvMap).parseFileDotEnvVars(): error while reading cfg file", err))
 	}
 }
 
 func (c *CfgEnvMap) parseIpFromInterface(log T.ILog) {
 	addr, err := net.InterfaceAddrs()
 	if err != nil {
-		log.LogError(err, "(CfgEnvMap).parseIpFromInterface(): error while getting IP interface")
+		log.LogError(fmt.Errorf("%s: %w", "CfgEnvMap.parseIpFromInterface(): error while getting IP interface", err))
 		return
 	}
 	strarr := []string{}
