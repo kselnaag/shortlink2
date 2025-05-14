@@ -1,26 +1,33 @@
 package log
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
 	T "shortlink2/internal/types"
+	"strings"
+	"sync"
 	"time"
 )
 
 var _ T.ILog = (*LogFprintf)(nil)
 
 type LogFprintf struct {
-	loglvl  T.LogLevel
-	host    string
-	svc     string
-	targets []io.Writer
+	loglvl    T.LogLevel
+	host      string
+	svc       string
+	targets   []io.Writer
+	batchTime time.Duration
+	logbuf    []string
+	mu        sync.Mutex
 }
 
-func NewLogFprintf(cfg T.ICfg, targets ...io.Writer) *LogFprintf {
+func NewLogFprintf(cfg T.ICfg, batchTime time.Duration, targets ...io.Writer) *LogFprintf {
 	if len(targets) == 0 {
 		targets = append(targets, os.Stderr)
 	}
+
 	host := cfg.GetVal(T.SL_HTTP_IP) + cfg.GetVal(T.SL_HTTP_PORT)
 	svc := cfg.GetVal(T.SL_APP_NAME)
 	var lvl T.LogLevel
@@ -43,17 +50,61 @@ func NewLogFprintf(cfg T.ICfg, targets ...io.Writer) *LogFprintf {
 		lvl = T.NoLog
 	}
 	return &LogFprintf{
-		loglvl:  lvl,
-		host:    host,
-		svc:     svc,
-		targets: targets,
+		loglvl:    lvl,
+		host:      host,
+		svc:       svc,
+		targets:   targets,
+		batchTime: batchTime,
+		logbuf:    make([]string, 0, 100),
+	}
+}
+
+func (l *LogFprintf) Start() func() {
+	var wg sync.WaitGroup
+	ctx, ctxCancel := context.WithCancel(context.Background())
+	if l.batchTime != 0 {
+		wg.Add(1)
+		go func() {
+			writeBatch := func() {
+				l.mu.Lock()
+				if len(l.logbuf) != 0 {
+					batchstr := strings.Join(l.logbuf, "")
+					for _, point := range l.targets {
+						fmt.Fprintf(point, batchstr)
+					}
+					l.logbuf = l.logbuf[:0]
+				}
+				l.mu.Unlock()
+			}
+			for {
+				select {
+				case <-time.After(l.batchTime):
+					writeBatch()
+				case <-ctx.Done():
+					writeBatch()
+					wg.Done()
+					return
+				}
+			}
+		}()
+	}
+	return func() {
+		ctxCancel()
+		wg.Wait()
 	}
 }
 
 func (l *LogFprintf) logMessage(lvl, host, svc, mess string) {
 	timenow := time.Now().Format(time.RFC3339Nano)
-	for _, point := range l.targets {
-		fmt.Fprintf(point, `{"T":"%s","L":"%s","H":"%s","S":"%s","M":"%s"}`+"\n", timenow, lvl, host, svc, mess)
+	formatstr := `{"T":"%s","L":"%s","H":"%s","S":"%s","M":"%s"}` + "\n"
+	if l.batchTime == 0 {
+		for _, point := range l.targets {
+			fmt.Fprintf(point, formatstr, timenow, lvl, host, svc, mess)
+		}
+	} else {
+		l.mu.Lock()
+		l.logbuf = append(l.logbuf, fmt.Sprintf(formatstr, timenow, lvl, host, svc, mess))
+		l.mu.Unlock()
 	}
 }
 

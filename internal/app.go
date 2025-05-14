@@ -10,6 +10,7 @@ import (
 	L "shortlink2/internal/log"
 	S "shortlink2/internal/service"
 	T "shortlink2/internal/types"
+	"time"
 )
 
 type App struct {
@@ -24,7 +25,7 @@ type App struct {
 func NewApp() *App {
 	dir, file := execPathAndFname()
 	cfg := C.NewCfgEnvMap(dir, file).Parse()
-	log := L.NewLogFprintf(cfg)
+	log := L.NewLogFprintf(cfg, 0*time.Second)
 	db := D.NewDBsqlite(cfg, log, filepath.Join(dir, "db/sqlite.db"))
 	// db := D.NewDBmock(cfg, log)
 	svcsl2 := S.NewSvcShortLink2(db, log)
@@ -40,6 +41,7 @@ func NewApp() *App {
 }
 
 func (a *App) Start() func(err error) {
+	logStop := a.log.Start()
 	dbShutdown := a.db.ConnectDB()
 	hsrvShutdown := a.hsrv.Run()
 	a.log.LogInfo(a.file + " app started")
@@ -52,6 +54,7 @@ func (a *App) Start() func(err error) {
 		} else {
 			a.log.LogInfo(a.file + " app stoped")
 		}
+		logStop()
 	}
 }
 
