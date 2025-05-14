@@ -50,10 +50,7 @@ func (a *App) Start() func(err error) {
 
 func makeFullPath(fname string) string {
 	if len(fname) != 0 {
-		exec, err := os.Executable() // takeExecutableFullPath
-		if err != nil {
-			return ""
-		}
+		exec, _ := os.Executable() // takeExecutableFullPath
 		return filepath.Join(filepath.Dir(exec), fname)
 	}
 	return ""
