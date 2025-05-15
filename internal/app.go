@@ -49,8 +49,7 @@ func (a *App) Start() func(err error) {
 		hsrvShutdown(err)
 		dbShutdown(err)
 		if err != nil {
-			// a.log.LogError(err, a.file+" app stoped with error")
-			a.log.LogError(fmt.Errorf("%s: %w", a.file+" app stoped with error", err))
+			a.log.LogPanic(fmt.Errorf("%s: %w", a.file+" app stoped with error", err))
 		} else {
 			a.log.LogInfo(a.file + " app stoped")
 		}

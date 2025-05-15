@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime/debug"
 	T "shortlink2/internal/types"
 	"strings"
 	"sync"
@@ -24,10 +25,10 @@ type LogFprintf struct {
 }
 
 func NewLogFprintf(cfg T.ICfg, batchTime time.Duration, targets ...io.Writer) *LogFprintf {
+	debug.SetTraceback("all")
 	if len(targets) == 0 {
 		targets = append(targets, os.Stderr)
 	}
-
 	host := cfg.GetVal(T.SL_HTTP_IP) + cfg.GetVal(T.SL_HTTP_PORT)
 	svc := cfg.GetVal(T.SL_APP_NAME)
 	var lvl T.LogLevel
@@ -59,29 +60,30 @@ func NewLogFprintf(cfg T.ICfg, batchTime time.Duration, targets ...io.Writer) *L
 	}
 }
 
+func (l *LogFprintf) writeBatch() {
+	l.mu.Lock()
+	if len(l.logbuf) != 0 {
+		batchstr := strings.Join(l.logbuf, "")
+		for _, point := range l.targets {
+			fmt.Fprintf(point, batchstr)
+		}
+		l.logbuf = l.logbuf[:0]
+	}
+	l.mu.Unlock()
+}
+
 func (l *LogFprintf) Start() func() {
 	var wg sync.WaitGroup
 	ctx, ctxCancel := context.WithCancel(context.Background())
 	if l.batchTime != 0 {
 		wg.Add(1)
 		go func() {
-			writeBatch := func() {
-				l.mu.Lock()
-				if len(l.logbuf) != 0 {
-					batchstr := strings.Join(l.logbuf, "")
-					for _, point := range l.targets {
-						fmt.Fprintf(point, batchstr)
-					}
-					l.logbuf = l.logbuf[:0]
-				}
-				l.mu.Unlock()
-			}
 			for {
 				select {
 				case <-time.After(l.batchTime):
-					writeBatch()
+					l.writeBatch()
 				case <-ctx.Done():
-					writeBatch()
+					l.writeBatch()
 					wg.Done()
 					return
 				}
@@ -140,12 +142,16 @@ func (l *LogFprintf) LogError(err error) {
 
 func (l *LogFprintf) LogPanic(err error) {
 	if l.loglvl <= T.Panic {
-		l.logMessage(T.StrPanic, l.host, l.svc, err.Error())
+		l.logMessage(T.StrPanic, l.host, l.svc, fmt.Sprintf("%s\n%s", err.Error(), debug.Stack()))
 	}
 }
 
 func (l *LogFprintf) LogFatal(err error) {
 	if l.loglvl <= T.Fatal {
-		l.logMessage(T.StrFatal, l.host, l.svc, err.Error())
+		l.logMessage(T.StrFatal, l.host, l.svc, fmt.Sprintf("%s\n%s", err.Error(), debug.Stack()))
+		if l.batchTime != 0 {
+			l.writeBatch()
+		}
+		os.Exit(1)
 	}
 }
