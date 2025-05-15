@@ -1,3 +1,14 @@
+/*
+	Fprintf log module:
+
+- universal DI interface (see types/log.go)
+- structured log by JSON
+- manual key positions into JSON object
+- 8 Log levels (trace, debug, info, warn, error, panic, fatal, nolog)
+- stack trace in Panic and Fatal(+exiting) log messages
+- multi-target message sending by io.Writer interface (if empty - os.Stderr)
+- log batching with timeout (if 0 - no batching)
+*/
 package log
 
 import (
@@ -14,8 +25,32 @@ import (
 
 var _ T.ILog = (*LogFprintf)(nil)
 
+const (
+	StrTrace = "TRACE"
+	StrDebug = "DEBUG"
+	StrInfo  = "INFO"
+	StrWarn  = "WARN"
+	StrError = "ERROR"
+	StrPanic = "PANIC"
+	StrFatal = "FATAL"
+	StrNoLog = "NOLOG"
+)
+
+type LogLevel int8
+
+const (
+	Trace LogLevel = iota
+	Debug
+	Info
+	Warn
+	Error
+	Panic
+	Fatal
+	NoLog
+)
+
 type LogFprintf struct {
-	loglvl    T.LogLevel
+	loglvl    LogLevel
 	host      string
 	svc       string
 	targets   []io.Writer
@@ -31,24 +66,24 @@ func NewLogFprintf(cfg T.ICfg, batchTime time.Duration, targets ...io.Writer) *L
 	}
 	host := cfg.GetVal(T.SL_HTTP_IP) + cfg.GetVal(T.SL_HTTP_PORT)
 	svc := cfg.GetVal(T.SL_APP_NAME)
-	var lvl T.LogLevel
+	var lvl LogLevel
 	switch cfg.GetVal(T.SL_LOG_LEVEL) {
-	case T.StrTrace:
-		lvl = T.Trace
-	case T.StrDebug:
-		lvl = T.Debug
-	case T.StrInfo:
-		lvl = T.Info
-	case T.StrWarn:
-		lvl = T.Warn
-	case T.StrError:
-		lvl = T.Error
-	case T.StrPanic:
-		lvl = T.Panic
-	case T.StrFatal:
-		lvl = T.Fatal
+	case StrTrace:
+		lvl = Trace
+	case StrDebug:
+		lvl = Debug
+	case StrInfo:
+		lvl = Info
+	case StrWarn:
+		lvl = Warn
+	case StrError:
+		lvl = Error
+	case StrPanic:
+		lvl = Panic
+	case StrFatal:
+		lvl = Fatal
 	default:
-		lvl = T.NoLog
+		lvl = NoLog
 	}
 	return &LogFprintf{
 		loglvl:    lvl,
@@ -111,44 +146,44 @@ func (l *LogFprintf) logMessage(lvl, host, svc, mess string) {
 }
 
 func (l *LogFprintf) LogTrace(format string, v ...any) {
-	if l.loglvl <= T.Trace {
-		l.logMessage(T.StrTrace, l.host, l.svc, fmt.Sprintf(format, v...))
+	if l.loglvl <= Trace {
+		l.logMessage(StrTrace, l.host, l.svc, fmt.Sprintf(format, v...))
 	}
 }
 
 func (l *LogFprintf) LogDebug(format string, v ...any) {
-	if l.loglvl <= T.Debug {
-		l.logMessage(T.StrDebug, l.host, l.svc, fmt.Sprintf(format, v...))
+	if l.loglvl <= Debug {
+		l.logMessage(StrDebug, l.host, l.svc, fmt.Sprintf(format, v...))
 	}
 }
 
 func (l *LogFprintf) LogInfo(format string, v ...any) {
-	if l.loglvl <= T.Info {
-		l.logMessage(T.StrInfo, l.host, l.svc, fmt.Sprintf(format, v...))
+	if l.loglvl <= Info {
+		l.logMessage(StrInfo, l.host, l.svc, fmt.Sprintf(format, v...))
 	}
 }
 
 func (l *LogFprintf) LogWarn(format string, v ...any) {
-	if l.loglvl <= T.Warn {
-		l.logMessage(T.StrWarn, l.host, l.svc, fmt.Sprintf(format, v...))
+	if l.loglvl <= Warn {
+		l.logMessage(StrWarn, l.host, l.svc, fmt.Sprintf(format, v...))
 	}
 }
 
 func (l *LogFprintf) LogError(err error) {
-	if l.loglvl <= T.Error {
-		l.logMessage(T.StrError, l.host, l.svc, err.Error())
+	if l.loglvl <= Error {
+		l.logMessage(StrError, l.host, l.svc, err.Error())
 	}
 }
 
 func (l *LogFprintf) LogPanic(err error) {
-	if l.loglvl <= T.Panic {
-		l.logMessage(T.StrPanic, l.host, l.svc, fmt.Sprintf("%s\n%s", err.Error(), debug.Stack()))
+	if l.loglvl <= Panic {
+		l.logMessage(StrPanic, l.host, l.svc, fmt.Sprintf("%s\n%s", err.Error(), debug.Stack()))
 	}
 }
 
 func (l *LogFprintf) LogFatal(err error) {
-	if l.loglvl <= T.Fatal {
-		l.logMessage(T.StrFatal, l.host, l.svc, fmt.Sprintf("%s\n%s", err.Error(), debug.Stack()))
+	if l.loglvl <= Fatal {
+		l.logMessage(StrFatal, l.host, l.svc, fmt.Sprintf("%s\n%s", err.Error(), debug.Stack()))
 		if l.batchTime != 0 {
 			l.writeBatch()
 		}
