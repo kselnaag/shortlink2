@@ -17,8 +17,6 @@ type App struct {
 	hsrv T.IHTTPServer
 	db   T.IDB
 	log  T.ILog
-	cfg  T.ICfg
-	dir  string
 	file string
 }
 
@@ -34,8 +32,6 @@ func NewApp() *App {
 		hsrv: hsrv,
 		db:   db,
 		log:  log,
-		cfg:  cfg,
-		dir:  dir,
 		file: file,
 	}
 }

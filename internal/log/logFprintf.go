@@ -2,11 +2,11 @@
 	Fprintf log module:
 
 - universal DI interface (see types/log.go)
-- structured log by JSON
+- structured log to JSON
 - manual key positions into JSON object
 - 8 Log levels (trace, debug, info, warn, error, panic, fatal, nolog)
-- stack trace in Panic and Fatal(+exiting) log messages
-- multi-target message sending by io.Writer interface (if empty - os.Stderr)
+- stack trace in Panic and Fatal log messages (os.Exit(1) on Fatal)
+- multi-target message sending with io.Writer interface (if empty - os.Stderr)
 - log batching with timeout (if 0 - no batching)
 */
 package log
