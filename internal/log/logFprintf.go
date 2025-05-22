@@ -8,6 +8,7 @@
 - stack trace in Panic and Fatal log messages (os.Exit(1) on Fatal)
 - multi-target message sending with io.Writer interface (if empty - os.Stderr)
 - log batching with timeout (if 0 - no batching)
+- log metrics from "runtime/metrics" packet with timeout (if 0 - no metrics)
 */
 package log
 
@@ -17,6 +18,7 @@ import (
 	"io"
 	"os"
 	"runtime/debug"
+	"runtime/metrics"
 	T "shortlink2/internal/types"
 	"strings"
 	"sync"
@@ -50,16 +52,17 @@ const (
 )
 
 type LogFprintf struct {
-	loglvl    LogLevel
-	host      string
-	svc       string
-	targets   []io.Writer
-	batchTime time.Duration
-	logbuf    []string
-	mu        sync.Mutex
+	loglvl     LogLevel
+	host       string
+	svc        string
+	targets    []io.Writer
+	batchTime  time.Duration
+	logbuf     []string
+	mu         sync.Mutex
+	metricTime time.Duration
 }
 
-func NewLogFprintf(cfg T.ICfg, batchTime time.Duration, targets ...io.Writer) *LogFprintf {
+func NewLogFprintf(cfg T.ICfg, metricTime time.Duration, batchTime time.Duration, targets ...io.Writer) *LogFprintf {
 	debug.SetTraceback("all")
 	if len(targets) == 0 {
 		targets = append(targets, os.Stderr)
@@ -86,12 +89,13 @@ func NewLogFprintf(cfg T.ICfg, batchTime time.Duration, targets ...io.Writer) *L
 		lvl = NoLog
 	}
 	return &LogFprintf{
-		loglvl:    lvl,
-		host:      host,
-		svc:       svc,
-		targets:   targets,
-		batchTime: batchTime,
-		logbuf:    make([]string, 0, 100),
+		loglvl:     lvl,
+		host:       host,
+		svc:        svc,
+		targets:    targets,
+		batchTime:  batchTime,
+		logbuf:     make([]string, 0, 100),
+		metricTime: metricTime,
 	}
 }
 
@@ -119,6 +123,20 @@ func (l *LogFprintf) Start() func() {
 					l.writeBatch()
 				case <-ctx.Done():
 					l.writeBatch()
+					wg.Done()
+					return
+				}
+			}
+		}()
+	}
+	if l.metricTime != 0 {
+		wg.Add(1)
+		go func() {
+			for {
+				select {
+				case <-time.After(l.metricTime):
+					l.logMetrics(l.getMetrics())
+				case <-ctx.Done():
 					wg.Done()
 					return
 				}
@@ -189,4 +207,51 @@ func (l *LogFprintf) LogFatal(err error) {
 		}
 		os.Exit(1)
 	}
+}
+
+func (l *LogFprintf) logMetrics(msg string) {
+	l.logMessage("METRIC", l.host, l.svc, msg)
+}
+
+func (l *LogFprintf) medianBucket(h *metrics.Float64Histogram) float64 {
+	total := uint64(0)
+	for _, count := range h.Counts {
+		total += count
+	}
+	thresh := total / 2
+	total = 0
+	for i, count := range h.Counts {
+		total += count
+		if total >= thresh {
+			return h.Buckets[i]
+		}
+	}
+	panic("should not happen")
+}
+
+func (l *LogFprintf) getMetrics() string {
+	descs := metrics.All()
+	samples := make([]metrics.Sample, len(descs))
+	for i := range samples {
+		samples[i].Name = descs[i].Name
+	}
+	metrics.Read(samples)
+	var metr strings.Builder
+	metr.WriteString("\n")
+	for _, sample := range samples {
+		name, value := sample.Name, sample.Value
+		switch value.Kind() {
+		case metrics.KindUint64:
+			fmt.Fprintf(&metr, "%s: %d\n", name, value.Uint64())
+		case metrics.KindFloat64:
+			fmt.Fprintf(&metr, "%s: %f\n", name, value.Float64())
+		case metrics.KindFloat64Histogram:
+			fmt.Fprintf(&metr, "%s: %f\n", name, l.medianBucket(value.Float64Histogram()))
+		case metrics.KindBad:
+			l.LogPanic(fmt.Errorf("%s", "bad value kind in log module using runtime/metrics package!"))
+		default:
+			fmt.Fprintf(&metr, "%s: unexpected metric Kind: %v\n", name, value.Kind())
+		}
+	}
+	return metr.String()
 }

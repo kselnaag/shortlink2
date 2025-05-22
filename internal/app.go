@@ -23,8 +23,8 @@ type App struct {
 func NewApp() *App {
 	dir, file := execPathAndFname()
 	cfg := C.NewCfgEnvMap(dir, file).Parse()
-	log := L.NewLogFprintf(cfg, 0*time.Second)
-	db := D.NewDBsqlite(cfg, log, filepath.Join(dir, "db/sqlite.db"))
+	log := L.NewLogFprintf(cfg, 3*time.Second, 4*time.Second)
+	db := D.NewDBsqlite(cfg, log, dir)
 	// db := D.NewDBmock(cfg, log)
 	svcsl2 := S.NewSvcShortLink2(db, log)
 	hsrv := H.NewHTTPServerNet(svcsl2, log, cfg)

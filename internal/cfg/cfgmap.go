@@ -32,7 +32,7 @@ func NewCfgEnvMap(dir, file string) *CfgEnvMap {
 }
 
 func (c *CfgEnvMap) Parse() T.ICfg {
-	log := L.NewLogFprintf(c, 0)
+	log := L.NewLogFprintf(c, 0, 0)
 	c.parseIpFromInterface(log)
 	if len(c.fname) != 0 {
 		if _, err := os.Stat(c.fname); err == nil {

@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"path/filepath"
 	T "shortlink2/internal/types"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -17,11 +18,11 @@ type DBsqlite struct {
 	db     *sql.DB
 }
 
-func NewDBsqlite(cfg T.ICfg, log T.ILog, dbpath string) *DBsqlite {
+func NewDBsqlite(cfg T.ICfg, log T.ILog, dir string) *DBsqlite {
 	return &DBsqlite{
 		log:    log,
 		cfg:    cfg,
-		dbpath: dbpath,
+		dbpath: filepath.Join(dir, "db/sqlite.db"),
 	}
 }
 
