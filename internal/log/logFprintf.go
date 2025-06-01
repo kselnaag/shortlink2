@@ -57,7 +57,7 @@ type LogFprintf struct {
 	svc        string
 	targets    []io.Writer
 	batchTime  time.Duration
-	logbuf     []string
+	logbuf     strings.Builder
 	mu         sync.Mutex
 	metricTime time.Duration
 }
@@ -94,19 +94,17 @@ func NewLogFprintf(cfg T.ICfg, metricTime time.Duration, batchTime time.Duration
 		svc:        svc,
 		targets:    targets,
 		batchTime:  batchTime,
-		logbuf:     make([]string, 0, 100),
 		metricTime: metricTime,
 	}
 }
 
 func (l *LogFprintf) writeBatch() {
 	l.mu.Lock()
-	if len(l.logbuf) != 0 {
-		batchstr := strings.Join(l.logbuf, "")
+	if l.logbuf.Len() != 0 {
 		for _, point := range l.targets {
-			fmt.Fprintf(point, batchstr)
+			fmt.Fprintf(point, l.logbuf.String())
 		}
-		l.logbuf = l.logbuf[:0]
+		l.logbuf.Reset()
 	}
 	l.mu.Unlock()
 }
@@ -158,7 +156,7 @@ func (l *LogFprintf) logMessage(lvl, host, svc, mess string) {
 		}
 	} else {
 		l.mu.Lock()
-		l.logbuf = append(l.logbuf, fmt.Sprintf(formatstr, timenow, lvl, host, svc, mess))
+		l.logbuf.WriteString(fmt.Sprintf(formatstr, timenow, lvl, host, svc, mess))
 		l.mu.Unlock()
 	}
 }
@@ -226,7 +224,7 @@ func (l *LogFprintf) medianBucket(h *metrics.Float64Histogram) float64 {
 			return h.Buckets[i]
 		}
 	}
-	panic("should not happen")
+	panic("log module: should not happen")
 }
 
 func (l *LogFprintf) getMetrics() string {

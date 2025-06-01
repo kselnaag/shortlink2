@@ -10,7 +10,6 @@ import (
 	L "shortlink2/internal/log"
 	S "shortlink2/internal/service"
 	T "shortlink2/internal/types"
-	"time"
 )
 
 type App struct {
@@ -23,7 +22,7 @@ type App struct {
 func NewApp() *App {
 	dir, file := execPathAndFname()
 	cfg := C.NewCfgEnvMap(dir, file).Parse()
-	log := L.NewLogFprintf(cfg, 3*time.Second, 4*time.Second)
+	log := L.NewLogFprintf(cfg, 0, 0)
 	db := D.NewDBsqlite(cfg, log, dir)
 	// db := D.NewDBmock(cfg, log)
 	svcsl2 := S.NewSvcShortLink2(db, log)
