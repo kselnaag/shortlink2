@@ -9,6 +9,7 @@
 - multi-target message sending with io.Writer interface (if empty - os.Stderr)
 - log batching with timeout (if 0 - no batching)
 - log metrics from "runtime/metrics" packet with timeout (if 0 - no metrics)
+- Error, Panic, Fatal has filepath and line number
 */
 package log
 
@@ -17,6 +18,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime"
 	"runtime/debug"
 	"runtime/metrics"
 	T "shortlink2/internal/types"
@@ -147,6 +149,14 @@ func (l *LogFprintf) Start() func() {
 	}
 }
 
+func getLineNumber() string {
+	_, file, line, ok := runtime.Caller(2)
+	if ok {
+		return fmt.Sprintf("%s:%d", file, line)
+	}
+	return ""
+}
+
 func (l *LogFprintf) logMessage(lvl, host, svc, mess string) {
 	timenow := time.Now().Format(time.RFC3339Nano)
 	formatstr := `{"T":"%s","L":"%s","H":"%s","S":"%s","M":"%s"}` + "\n"
@@ -187,19 +197,19 @@ func (l *LogFprintf) LogWarn(format string, v ...any) {
 
 func (l *LogFprintf) LogError(err error) {
 	if l.loglvl <= Error {
-		l.logMessage(StrError, l.host, l.svc, err.Error())
+		l.logMessage(StrError, l.host, l.svc, fmt.Sprintf("%s: %s", getLineNumber(), err.Error()))
 	}
 }
 
 func (l *LogFprintf) LogPanic(err error) {
 	if l.loglvl <= Panic {
-		l.logMessage(StrPanic, l.host, l.svc, fmt.Sprintf("%s\n%s", err.Error(), debug.Stack()))
+		l.logMessage(StrPanic, l.host, l.svc, fmt.Sprintf("%s: %s: %s", getLineNumber(), err.Error(), debug.Stack()))
 	}
 }
 
 func (l *LogFprintf) LogFatal(err error) {
 	if l.loglvl <= Fatal {
-		l.logMessage(StrFatal, l.host, l.svc, fmt.Sprintf("%s\n%s", err.Error(), debug.Stack()))
+		l.logMessage(StrFatal, l.host, l.svc, fmt.Sprintf("%s: %s: %s", getLineNumber(), err.Error(), debug.Stack()))
 		if l.batchTime != 0 {
 			l.writeBatch()
 		}
