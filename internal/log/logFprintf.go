@@ -69,8 +69,7 @@ func NewLogFprintf(cfg T.ICfg, metricTime time.Duration, batchTime time.Duration
 	if len(targets) == 0 {
 		targets = append(targets, os.Stderr)
 	}
-	host := cfg.GetVal(T.SL_HTTP_IP) + cfg.GetVal(T.SL_HTTP_PORT)
-	svc := cfg.GetVal(T.SL_APP_NAME)
+
 	var lvl LogLevel
 	switch cfg.GetVal(T.SL_LOG_LEVEL) {
 	case StrTrace:
@@ -92,8 +91,8 @@ func NewLogFprintf(cfg T.ICfg, metricTime time.Duration, batchTime time.Duration
 	}
 	return &LogFprintf{
 		loglvl:     lvl,
-		host:       host,
-		svc:        svc,
+		host:       cfg.GetVal(T.SL_HTTP_IP) + cfg.GetVal(T.SL_HTTP_PORT),
+		svc:        cfg.GetVal(T.SL_APP_NAME),
 		targets:    targets,
 		batchTime:  batchTime,
 		metricTime: metricTime,
@@ -149,6 +148,10 @@ func (l *LogFprintf) Start() func() {
 	}
 }
 
+func replaceEOL(str string) string {
+	return strings.ReplaceAll(str, "\n", "\t")
+}
+
 func getLineNumber() string {
 	_, file, line, ok := runtime.Caller(2)
 	if ok {
@@ -162,7 +165,7 @@ func (l *LogFprintf) logMessage(lvl, host, svc, mess string) {
 	formatstr := `{"T":"%s","L":"%s","H":"%s","S":"%s","M":"%s"}` + "\n"
 	if l.batchTime == 0 {
 		for _, point := range l.targets {
-			fmt.Fprintf(point, formatstr, timenow, lvl, host, svc, mess)
+			fmt.Fprintf(point, formatstr, timenow, lvl, host, svc, replaceEOL(mess))
 		}
 	} else {
 		l.mu.Lock()
