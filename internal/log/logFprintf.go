@@ -8,8 +8,9 @@
 - stack trace in Panic and Fatal log messages (os.Exit(1) on Fatal)
 - multi-target message sending with io.Writer interface (if empty - os.Stderr)
 - log batching with timeout (if 0 - no batching)
-- log metrics from "runtime/metrics" packet with timeout (if 0 - no metrics)
+- log metrics from "runtime/metrics" with timeout (if 0 - no metrics)
 - Error, Panic, Fatal has filepath and line number
+- ASSERT, TODO, UNREACHABLE dev messages are sending to os.Stdout
 */
 package log
 
@@ -103,7 +104,7 @@ func (l *LogFprintf) writeBatch() {
 	l.mu.Lock()
 	if l.logbuf.Len() != 0 {
 		for _, point := range l.targets {
-			fmt.Fprintf(point, l.logbuf.String())
+			fmt.Fprint(point, l.logbuf.String())
 		}
 		l.logbuf.Reset()
 	}
@@ -150,14 +151,6 @@ func (l *LogFprintf) Start() func() {
 
 func replaceEOL(str string) string {
 	return strings.ReplaceAll(str, "\n", "\t")
-}
-
-func getLineNumber() string {
-	_, file, line, ok := runtime.Caller(2)
-	if ok {
-		return fmt.Sprintf("%s:%d", file, line)
-	}
-	return ""
 }
 
 func (l *LogFprintf) logMessage(lvl, host, svc, mess string) {
@@ -220,6 +213,14 @@ func (l *LogFprintf) LogFatal(err error) {
 	}
 }
 
+func getLineNumber() string {
+	_, file, line, ok := runtime.Caller(2)
+	if ok {
+		return fmt.Sprintf("%s:%d", file, line)
+	}
+	return ""
+}
+
 func (l *LogFprintf) logMetrics(msg string) {
 	l.logMessage("METRIC", l.host, l.svc, msg)
 }
@@ -265,4 +266,23 @@ func (l *LogFprintf) getMetrics() string {
 		}
 	}
 	return metr.String()
+}
+
+func ASSERT_(cond bool, msg string) {
+	if !cond {
+		fmt.Fprintf(os.Stdout, "\n[ASSERT] %s %s\n\n", getLineNumber(), msg)
+	}
+}
+
+func ASSERT(cond bool, msg string) {
+	ASSERT_(cond, msg)
+	os.Exit(1)
+}
+
+func TODO(msg string) {
+	fmt.Fprintf(os.Stdout, "\n[TODO] %s %s\n\n", getLineNumber(), msg)
+}
+
+func UNREACHABLE(msg string) {
+	fmt.Fprintf(os.Stdout, "\n[UNREACHABLE] %s %s\n\n", getLineNumber(), msg)
 }
