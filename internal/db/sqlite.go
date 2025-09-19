@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"path/filepath"
 	T "shortlink2/internal/types"
+	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -77,7 +78,7 @@ func (s *DBsqlite) InitDB() {
 		return
 	}
 	_, err2 := s.db.Exec("INSERT INTO shortlink VALUES ('5clp60', 'http://lib.ru'); INSERT INTO shortlink VALUES ('dhiu79', 'http://google.ru');")
-	if err2 != nil {
+	if err2 != nil && !strings.Contains(err2.Error(), "UNIQUE constraint failed") {
 		s.log.LogError(fmt.Errorf("%s: %w", "DBsqlite.InitDB(): unable to INSERT values", err2))
 		return
 	}
